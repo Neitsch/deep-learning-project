@@ -101,7 +101,7 @@ ENV/
 .mypy_cache/
 
 # vim 
-.swp
+*.swp
 
 #saved models
 mnist_chainer/saved_model

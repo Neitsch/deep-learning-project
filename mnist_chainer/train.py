@@ -6,7 +6,9 @@ import numpy as np
 
 import chainer
 from chainer.dataset.convert import concat_examples
+from chainer.datasets import tuple_dataset
 from chainer import serializers
+from keras.preprocessing.image import ImageDataGenerator
 
 import nets
 
@@ -19,6 +21,7 @@ def main():
     parser.add_argument('--gpu', '-g', type=int, default=-1)
     parser.add_argument('--seed', '-s', type=int, default=789)
     parser.add_argument('--reconstruct', '--recon', action='store_true')
+    parser.add_argument('--argumenttest',  action='store_true')
     parser.add_argument('--save')
     args = parser.parse_args()
     print(json.dumps(args.__dict__, indent=2))
@@ -39,6 +42,39 @@ def main():
 
     # Load the MNIST dataset
     train, test = chainer.datasets.get_mnist(ndim=3)
+
+
+    if args.argumenttest:
+        datagen = ImageDataGenerator(
+                rotation_range=30,
+                horizontal_flip=False,
+                vertical_flip=False,
+                )
+        test_X = []
+        test_y = []
+        for image, label in test:
+
+            test_X.append(np.resize(image[0], (28,28,1)))
+            test_y.append(label)
+
+
+        test_X = np.array(test_X)
+        test_y = np.array(test_y)
+        test_X_arg = []
+        test_y_arg = []
+        for x_batch, y_batch in datagen.flow(test_X, test_y, batch_size=len(test_y), shuffle=False, seed=0):
+            test_X_arg = x_batch
+            test_y_arg = y_batch
+            break
+
+        test_X_arg_trans = []
+        for image in test_X_arg:
+            test_X_arg_trans.append(np.resize(image, (1,28,28)))
+        
+        test_X_arg_trans = np.array(test_X_arg_trans)
+        test = tuple_dataset.TupleDataset(test_X_arg_trans, test_y_arg)
+
+
     train_iter = chainer.iterators.SerialIterator(train, args.batchsize)
     test_iter = chainer.iterators.SerialIterator(test, 100,
                                                  repeat=False, shuffle=False)
