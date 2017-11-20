@@ -1,0 +1,62 @@
+datagen = ImageDataGenerator(
+                rotation_range=30,
+                horizontal_flip=False,
+                vertical_flip=False,
+                width_shift_range = 0.5,
+                height_shift_range = 0.5,
+                zoom_range = [0.5,1.0]
+                )
+
+
+
+
+python3 mnist_cnn.py 
+Using TensorFlow backend.
+x_train shape: (60000, 28, 28, 1)
+60000 train samples
+10000 test samples
+Train on 60000 samples, validate on 10000 samples
+Epoch 1/12
+2017-11-20 17:50:25.798880: I tensorflow/core/platform/cpu_feature_guard.cc:137] Your CPU supports instructions that this
+ TensorFlow binary was not compiled to use: SSE4.1 SSE4.2 AVX AVX2 FMA
+2017-11-20 17:50:25.906481: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:892] successful NUMA node read from Sy
+sFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2017-11-20 17:50:25.907161: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1030] Found device 0 with properties: 
+name: Tesla K80 major: 3 minor: 7 memoryClockRate(GHz): 0.8235
+pciBusID: 0000:00:04.0
+totalMemory: 11.17GiB freeMemory: 8.54GiB
+2017-11-20 17:50:25.907216: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1120] Creating TensorFlow device (/device:
+GPU:0) -> (device: 0, name: Tesla K80, pci bus id: 0000:00:04.0, compute capability: 3.7)
+60000/60000 [==============================] - 34s 560us/step - loss: 0.3313 - acc: 0.8986 - val_loss: 3.8913 - val_acc: 
+0.1233
+Epoch 2/12
+60000/60000 [==============================] - 31s 520us/step - loss: 0.1131 - acc: 0.9667 - val_loss: 4.0644 - val_acc: 
+0.1315
+Epoch 3/12
+60000/60000 [==============================] - 31s 518us/step - loss: 0.0851 - acc: 0.9751 - val_loss: 4.3270 - val_acc: 
+0.1308
+Epoch 4/12
+60000/60000 [==============================] - 31s 524us/step - loss: 0.0710 - acc: 0.9789 - val_loss: 4.7278 - val_acc: 
+0.1252
+Epoch 5/12
+60000/60000 [==============================] - 31s 520us/step - loss: 0.0623 - acc: 0.9817 - val_loss: 4.7337 - val_acc: 
+0.1260
+Epoch 6/12
+60000/60000 [==============================] - 28s 466us/step - loss: 0.0562 - acc: 0.9835 - val_loss: 5.1442 - val_acc: 
+0.1305
+Epoch 7/12
+60000/60000 [==============================] - 31s 521us/step - loss: 0.0508 - acc: 0.9851 - val_loss: 5.1249 - val_acc: 
+0.1316
+Epoch 8/12
+60000/60000 [==============================] - 31s 524us/step - loss: 0.0473 - acc: 0.9858 - val_loss: 5.4628 - val_acc: 
+0.1328
+Epoch 9/12
+60000/60000 [==============================] - 31s 522us/step - loss: 0.0439 - acc: 0.9869 - val_loss: 5.3343 - val_acc: 0.1338
+Epoch 10/12
+60000/60000 [==============================] - 31s 520us/step - loss: 0.0399 - acc: 0.9885 - val_loss: 5.5852 - val_acc: 0.1275
+Epoch 11/12
+60000/60000 [==============================] - 31s 521us/step - loss: 0.0375 - acc: 0.9885 - val_loss: 5.4959 - val_acc: 0.1337
+Epoch 12/12
+60000/60000 [==============================] - 31s 518us/step - loss: 0.0366 - acc: 0.9888 - val_loss: 5.2232 - val_acc: 0.1362
+Test loss: 5.22316347198
+Test accuracy: 0.1362
