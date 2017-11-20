@@ -1,0 +1,40 @@
+
+n3 mnist_cnn.py
+Using TensorFlow backend.
+x_train shape: (60000, 28, 28, 1)
+60000 train samples
+10000 test samples
+Train on 60000 samples, validate on 10000 samples
+Epoch 1/12
+2017-11-20 16:38:31.220590: I tensorflow/core/platform/cpu_feature_guard.cc:137] Your CPU supports instructions that this TensorFlow binary was not compiled to use: SSE4.1 SSE4.2 AVX AVX2 FMA
+2017-11-20 16:38:33.654287: I tensorflow/stream_executor/cuda/cuda_gpu_executor.cc:892] successful NUMA node read from SysFS had negative value (-1), but there must be at least one NUMA node, so returning NUMA node zero
+2017-11-20 16:38:33.655069: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1030] Found device 0 with properties: 
+name: Tesla K80 major: 3 minor: 7 memoryClockRate(GHz): 0.8235
+pciBusID: 0000:00:04.0
+totalMemory: 11.17GiB freeMemory: 11.10GiB
+2017-11-20 16:38:33.655098: I tensorflow/core/common_runtime/gpu/gpu_device.cc:1120] Creating TensorFlow device (/device:GPU:0) -> (device: 0, name: Tesla K80, pci bus id: 0000:00:04.0, compute capability: 3.7)
+60000/60000 [==============================] - 14s 233us/step - loss: 0.3315 - acc: 0.8981 - val_loss: 3.0504 - val_acc: 0.4677
+Epoch 2/12
+60000/60000 [==============================] - 10s 173us/step - loss: 0.1120 - acc: 0.9666 - val_loss: 3.1472 - val_acc: 0.4903
+Epoch 3/12
+60000/60000 [==============================] - 10s 171us/step - loss: 0.0870 - acc: 0.9744 - val_loss: 3.1320 - val_acc: 0.5010
+Epoch 4/12
+60000/60000 [==============================] - 10s 173us/step - loss: 0.0720 - acc: 0.9785 - val_loss: 3.3383 - val_acc: 0.5065
+Epoch 5/12
+60000/60000 [==============================] - 10s 173us/step - loss: 0.0638 - acc: 0.9815 - val_loss: 3.2734 - val_acc: 0.5066
+Epoch 6/12
+60000/60000 [==============================] - 10s 173us/step - loss: 0.0565 - acc: 0.9832 - val_loss: 3.3194 - val_acc: 0.5104
+Epoch 7/12
+60000/60000 [==============================] - 10s 173us/step - loss: 0.0523 - acc: 0.9843 - val_loss: 3.3075 - val_acc: 0.5187
+Epoch 8/12
+60000/60000 [==============================] - 10s 173us/step - loss: 0.0476 - acc: 0.9852 - val_loss: 3.0908 - val_acc: 0.5244
+Epoch 9/12
+60000/60000 [==============================] - 10s 172us/step - loss: 0.0450 - acc: 0.9865 - val_loss: 3.4153 - val_acc: 0.5258
+Epoch 10/12
+60000/60000 [==============================] - 10s 171us/step - loss: 0.0421 - acc: 0.9875 - val_loss: 3.2771 - val_acc: 0.5264
+Epoch 11/12
+60000/60000 [==============================] - 10s 171us/step - loss: 0.0413 - acc: 0.9878 - val_loss: 3.3049 - val_acc: 0.5327
+Epoch 12/12
+60000/60000 [==============================] - 10s 171us/step - loss: 0.0382 - acc: 0.9884 - val_loss: 3.2454 - val_acc: 0.5320
+Test loss: 3.24542029991
+Test accuracy: 0.532
