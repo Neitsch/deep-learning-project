@@ -1,0 +1,85 @@
+python3 -u train.py -g 0 --save saved_mo
+del_square_squash_90 --reconstruct --argumenttest
+Using TensorFlow backend.
+{
+  "reconstruct": true,
+  "save": "saved_model_square_squash_90",
+  "decay": 0.95,
+  "argumenttest": true,
+  "seed": 789,
+  "gpu": 0,
+  "batchsize": 256,
+  "epoch": 500
+}
+# of params 6787088
+# of params if unshared 8399888
+/home/msc2209/.local/lib/python3.4/site-packages/chainer/cuda.py:84: UserWarning: cuDNN is not enabled.
+Please reinstall CuPy after you install cudnn
+(see https://docs-cupy.chainer.org/en/stable/install.html#install-cupy-with-cudnn-and-nccl).
+  'cuDNN is not enabled.\n'
+TRAINING starts
+epoch  1        train mean loss: 0.4267972707748413, accuracy: 0.8090591755319149
+                        classification: 0.39482173323631287, reconstruction: 63.951934814453125
+epoch  1        test  mean loss: 0.5109160542488098, accuracy: 0.4313
+                        classification: 0.48232582211494446, reconstruction: 57.180206298828125
+                # optimizer alpha 0.00095
+epoch  2        train mean loss: 0.3906436860561371, accuracy: 0.9439770299145299
+                        classification: 0.36464837193489075, reconstruction: 51.99063491821289
+epoch  2        test  mean loss: 0.5077771544456482, accuracy: 0.4567
+                        classification: 0.48045045137405396, reconstruction: 54.65361404418945
+                # optimizer alpha 0.0009025
+epoch  3        train mean loss: 0.38261348009109497, accuracy: 0.9599734042553192
+                        classification: 0.3586755394935608, reconstruction: 47.875736236572266
+epoch  3        test  mean loss: 0.494831383228302, accuracy: 0.4857
+                        classification: 0.46844497323036194, reconstruction: 52.7723503112793
+                # optimizer alpha 0.000857375
+epoch  4        train mean loss: 0.3760857880115509, accuracy: 0.9667134081196581
+                        classification: 0.35462963581085205, reconstruction: 42.91217803955078
+epoch  4        test  mean loss: 0.4970729947090149, accuracy: 0.4992
+                        classification: 0.4720569849014282, reconstruction: 50.03182601928711
+                # optimizer alpha 0.0008145062499999999
+epoch  5        train mean loss: 0.3705860376358032, accuracy: 0.9717548076923077
+                        classification: 0.3513113260269165, reconstruction: 38.54939270019531
+epoch  5        test  mean loss: 0.49575352668762207, accuracy: 0.4934
+                        classification: 0.47177553176879883, reconstruction: 47.955772399902344
+                # optimizer alpha 0.0007737809374999998
+epoch  6        train mean loss: 0.3697281777858734, accuracy: 0.9732546542553191
+                        classification: 0.3518572151660919, reconstruction: 35.741943359375
+epoch  6        test  mean loss: 0.4957455098628998, accuracy: 0.4991
+                        classification: 0.47286733984947205, reconstruction: 45.756160736083984
+                # optimizer alpha 0.0007350918906249997
+epoch  7        train mean loss: 0.36581382155418396, accuracy: 0.9762453258547008
+                        classification: 0.3500533401966095, reconstruction: 31.521360397338867
+epoch  7        test  mean loss: 0.4870874881744385, accuracy: 0.5108
+                        classification: 0.46338775753974915, reconstruction: 47.39970779418945
+                # optimizer alpha 0.0006983372960937497
+epoch  8        train mean loss: 0.36518099904060364, accuracy: 0.9759281517094017
+                        classification: 0.35009101033210754, reconstruction: 30.18003273010254
+epoch  8        test  mean loss: 0.4868564307689667, accuracy: 0.5159
+                        classification: 0.4653368294239044, reconstruction: 43.03890609741211
+                # optimizer alpha 0.0006634204312890621
+epoch  9        train mean loss: 0.3598974943161011, accuracy: 0.9791888297872341
+                        classification: 0.3465060293674469, reconstruction: 26.783117294311523
+epoch  9        test  mean loss: 0.4866827726364136, accuracy: 0.5174
+                        classification: 0.46595001220703125, reconstruction: 41.46528244018555
+                # optimizer alpha 0.000630249409724609
+epoch 10        train mean loss: 0.359601229429245, accuracy: 0.9806857638888888
+                        classification: 0.3466867208480835, reconstruction: 25.829187393188477
+epoch 10        test  mean loss: 0.48299339413642883, accuracy: 0.5215
+                        classification: 0.4625137746334076, reconstruction: 40.95932388305664
+                # optimizer alpha 0.0005987369392383785
+epoch 11        train mean loss: 0.35989686846733093, accuracy: 0.9804853723404255
+                        classification: 0.3472519516944885, reconstruction: 25.290266036987305
+epoch 11        test  mean loss: 0.489408403635025, accuracy: 0.5063
+                        classification: 0.4684855043888092, reconstruction: 41.84572982788086
+                # optimizer alpha 0.0005688000922764595
+epoch 12        train mean loss: 0.35701557993888855, accuracy: 0.9815371260683761
+                        classification: 0.3453695476055145, reconstruction: 23.29203987121582
+epoch 12        test  mean loss: 0.47788217663764954, accuracy: 0.5284
+                        classification: 0.4581112265586853, reconstruction: 39.542205810546875
+                # optimizer alpha 0.0005403600876626365
+epoch 13        train mean loss: 0.35544127225875854, accuracy: 0.9835403311965812
+                        classification: 0.34450563788414, reconstruction: 21.87136459350586
+epoch 13        test  mean loss: 0.4822787046432495, accuracy: 0.5214
+                        classification: 0.4630736708641052, reconstruction: 38.41023254394531
+                # optimizer alpha 0.0005133420832795047
