@@ -26,6 +26,6 @@ with open(path) as f:
                 nextData[epoch].append(accuracy)
 
 with open('rotation.csv', 'w') as csvfile:
-    spamwriter = csv.writer(csvfile, quoting=csv.QUOTE_MINIMAL)
+    spamwriter = csv.writer(csvfile, quoting=csv.QUOTE_MINIMAL, delimiter=' ')
     for row in nextData:
         spamwriter.writerow(row)
