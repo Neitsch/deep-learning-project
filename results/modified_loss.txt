@@ -1,0 +1,61 @@
+TRAINING starts
+epoch  1        train mean loss: 0.5666871666908264, accuracy: 0.7613364361702127
+                        classification: 0.5357239246368408, reconstruction: 61.926673889160156
+epoch  1        test  mean loss: 0.19613642990589142, accuracy: 0.9524
+                        classification: 0.17327995598316193, reconstruction: 45.712913513183594
+                # optimizer alpha 0.00095
+epoch  2        train mean loss: 0.2083689570426941, accuracy: 0.9364483173076923
+                        classification: 0.1825188398361206, reconstruction: 51.70011520385742
+epoch  2        test  mean loss: 0.1546124815940857, accuracy: 0.9604
+                        classification: 0.1326875239610672, reconstruction: 43.84974670410156
+                # optimizer alpha 0.0009025
+epoch  3        train mean loss: 0.15241867303848267, accuracy: 0.9555518617021277
+                        classification: 0.12690487504005432, reconstruction: 51.027679443359375
+epoch  3        test  mean loss: 0.10467443615198135, accuracy: 0.9749
+                        classification: 0.08280814439058304, reconstruction: 43.73259353637695
+                # optimizer alpha 0.000857375
+epoch  4        train mean loss: 0.12254627048969269, accuracy: 0.9640090811965812
+                        classification: 0.09748748689889908, reconstruction: 50.11762619018555
+epoch  4        test  mean loss: 0.0841035395860672, accuracy: 0.9794
+                        classification: 0.06300446391105652, reconstruction: 42.19815444946289
+                # optimizer alpha 0.0008145062499999999
+epoch  5        train mean loss: 0.09826274961233139, accuracy: 0.9712206196581197
+                        classification: 0.07340358942747116, reconstruction: 49.71836853027344
+epoch  5        test  mean loss: 0.07896293699741364, accuracy: 0.9789
+                        classification: 0.058008573949337006, reconstruction: 41.90879440307617
+                # optimizer alpha 0.0007737809374999998
+epoch  6        train mean loss: 0.09211858361959457, accuracy: 0.9736203457446808
+                        classification: 0.06754742562770844, reconstruction: 49.14235305786133
+epoch  6        test  mean loss: 0.06741347908973694, accuracy: 0.9841
+                        classification: 0.0462520569562912, reconstruction: 42.322845458984375
+                # optimizer alpha 0.0007350918906249997
+epoch  7        train mean loss: 0.08946270495653152, accuracy: 0.9757946047008547
+                        classification: 0.06492588669061661, reconstruction: 49.073516845703125
+epoch  7        test  mean loss: 0.06886196881532669, accuracy: 0.9846
+                        classification: 0.048495884984731674, reconstruction: 40.732181549072266
+                # optimizer alpha 0.0006983372960937497
+epoch  8        train mean loss: 0.08916791528463364, accuracy: 0.9754774305555556
+                        classification: 0.06471384316682816, reconstruction: 48.908145904541016
+epoch  8        test  mean loss: 0.06290050595998764, accuracy: 0.9833
+                        classification: 0.04284076765179634, reconstruction: 40.1194953918457
+                # optimizer alpha 0.0006634204312890621
+epoch  9        train mean loss: 0.07173250615596771, accuracy: 0.9815159574468085
+                        classification: 0.04769709333777428, reconstruction: 48.070831298828125
+epoch  9        test  mean loss: 0.05581755191087723, accuracy: 0.9872
+                        classification: 0.03603222966194153, reconstruction: 39.57065200805664
+                # optimizer alpha 0.000630249409724609
+epoch 10        train mean loss: 0.07104215770959854, accuracy: 0.9819043803418803
+                        classification: 0.04722972959280014, reconstruction: 47.62479019165039
+epoch 10        test  mean loss: 0.05751781538128853, accuracy: 0.9856
+                        classification: 0.038465194404125214, reconstruction: 38.1052360534668
+                # optimizer alpha 0.0005987369392383785
+epoch 11        train mean loss: 0.06888198852539062, accuracy: 0.9821476063829787
+                        classification: 0.0454622320830822, reconstruction: 46.83946990966797
+epoch 11        test  mean loss: 0.0629301518201828, accuracy: 0.9856
+                        classification: 0.044099196791648865, reconstruction: 37.66192626953125
+                # optimizer alpha 0.0005688000922764595
+epoch 12        train mean loss: 0.06482455134391785, accuracy: 0.9842915331196581
+                        classification: 0.0417056567966938, reconstruction: 46.23777770996094
+epoch 12        test  mean loss: 0.05925595015287399, accuracy: 0.9857
+                        classification: 0.04026717320084572, reconstruction: 37.97758865356445
+                # optimizer alpha 0.0005403600876626365
