@@ -27,9 +27,7 @@ def main():
     print(json.dumps(args.__dict__, indent=2))
 
     augType = {
-            'width_shift_range' : [0.2, 0.5],
-            'zoom_range' : [0.5,1.0],
-            'shear_range' : [0.5,1.0],
+            'width_shift_range' : [0.5],
             }
 
     import csv
