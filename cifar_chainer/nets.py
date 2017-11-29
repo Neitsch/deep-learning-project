@@ -151,7 +151,7 @@ class CapsNet(chainer.Chain):
         x_recon = F.sigmoid(
             self.fc3(F.relu(
                 self.fc2(F.relu(
-                    self.fc1(masked_vs)))))).reshape((batchsize, 1, 28, 28))
+                    self.fc1(masked_vs)))))).reshape((batchsize, 3, 32, 32))
         return x_recon
 
     def calculate_loss(self, vs_norm, t, vs, x):
@@ -179,7 +179,12 @@ class CapsNet(chainer.Chain):
 
     def calculate_reconstruction_loss(self, vs, t, x):
         batchsize = t.shape[0]
+        print("x: ",  x[0].get().shape)
+        #print("x_recon: ", x_recon[0].array.get().shape, x[0].get().shape)
         x_recon = self.reconstruct(vs, t)
+        plt.imsave("example.png", x[0].get().reshape((3, 32, 32)))
+        plt.imsave("example_reconstruction.png", x_recon[0].array.get().reshape((3, 32, 32)))
+        exit()
         loss = (x_recon - x) ** 2
         return F.sum(loss) / batchsize
 

@@ -5,8 +5,11 @@ from chainer import cuda
 import chainer.functions as F
 import chainer.links as L
 
+import matplotlib.pyplot as plt
+
 
 def _augmentation(x):
+    print("NETS.PY AUGMENTATION IS ON")
     xp = cuda.get_array_module(x)
     MAX_SHIFT = 2
     batchsize, ch, h, w = x.shape
@@ -90,8 +93,8 @@ class CapsNet(chainer.Chain):
         return merge
 
     def __call__(self, x, t):
-        if chainer.config.train:
-            x = _augmentation(x)
+        #if chainer.config.train:
+        #    x = _augmentation(x)
         vs_norm, vs = self.output(x)
         self.loss = self.calculate_loss(vs_norm, t, vs, x)
 
@@ -104,10 +107,13 @@ class CapsNet(chainer.Chain):
         batchsize = x.shape[0]
         n_iters = self.n_iterations
         gg = self.n_grids * self.n_grids
-
+        #print("X: ", x.shape)
         # h1 = F.relu(self.conv1(x))
         h1 = F.leaky_relu(self.conv1(x), 0.05)
-        pr_caps = F.split_axis(self.conv2(h1), 32, axis=1)
+        #print("H1:", h1.shape)
+        h2 = self.conv2(h1)
+        #print("H2:", h2.shape)
+        pr_caps = F.split_axis(h2, 32, axis=1)
         # shapes if MNIST. -> if MultiMNIST
         # x (batchsize, 1, 28, 28) -> (:, :, 36, 36)
         # h1 (batchsize, 256, 20, 20) -> (:, :, 28, 28)
@@ -116,6 +122,8 @@ class CapsNet(chainer.Chain):
         Preds = []
         for i in range(32):
             pred = self.Ws[i](pr_caps[i])
+            #print("Caps[i]:", pr_caps[i].shape)
+            #print("Pred:", pred.shape)
             Pred = pred.reshape((batchsize, 16, 10, gg))
             Preds.append(Pred)
         Preds = F.stack(Preds, axis=3)
@@ -179,6 +187,10 @@ class CapsNet(chainer.Chain):
     def calculate_reconstruction_loss(self, vs, t, x):
         batchsize = t.shape[0]
         x_recon = self.reconstruct(vs, t)
+        #print("x_recon: ", x_recon[0].array.get().reshape((28, 28)).shape, x_recon[0].array.get().reshape((28, 28)).dtype, type(x_recon[0].array.get().reshape((28, 28))) )
+        plt.imsave("example.png", x[0].get().reshape((28, 28)), cmap='Greys')
+        plt.imsave("example_reconstruction.png", x_recon[0].array.get().reshape((28, 28)), cmap='Greys')
+        #exit()
         loss = (x_recon - x) ** 2
         return F.sum(loss) / batchsize
 
