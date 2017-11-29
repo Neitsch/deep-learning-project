@@ -183,7 +183,7 @@ class CapsNet(chainer.Chain):
         #print("x_recon: ", x_recon[0].array.get().shape, x[0].get().shape)
         x_recon = self.reconstruct(vs, t)
         plt.imsave("example.png", x[0].get().reshape((3, 32, 32)))
-        plt.imsave("example_reconstruction.png", x_recon[0].array.get().reshape((3, 32, 32)))
+        plt.imsave("example_reconstruction.png", np.rollaxis(x_recon[0].array.get(), 0, 3))
         exit()
         loss = (x_recon - x) ** 2
         return F.sum(loss) / batchsize
