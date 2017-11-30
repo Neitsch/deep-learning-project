@@ -4,6 +4,7 @@ import chainer
 from chainer import cuda
 import chainer.functions as F
 import chainer.links as L
+import matplotlib.pyplot as plt
 
 
 def _augmentation(x):
@@ -73,7 +74,7 @@ class CapsNet(chainer.Chain):
 
             self.fc1 = L.Linear(16 * 10, 512, initialW=init)
             self.fc2 = L.Linear(512, 1024, initialW=init)
-            self.fc3 = L.Linear(1024, 784, initialW=init)
+            self.fc3 = L.Linear(1024, 3072, initialW=init)
 
         _count_params(self, n_grids=self.n_grids)
         self.results = {'N': 0, 'loss': [], 'correct': [],
@@ -151,7 +152,9 @@ class CapsNet(chainer.Chain):
         x_recon = F.sigmoid(
             self.fc3(F.relu(
                 self.fc2(F.relu(
-                    self.fc1(masked_vs)))))).reshape((batchsize, 3, 32, 32))
+                    self.fc1(masked_vs))))))
+        print("Recon:", x_recon.shape)
+        x_recon = x_recon.reshape((batchsize, 3, 32, 32))
         return x_recon
 
     def calculate_loss(self, vs_norm, t, vs, x):
@@ -182,9 +185,8 @@ class CapsNet(chainer.Chain):
         print("x: ",  x[0].get().shape)
         #print("x_recon: ", x_recon[0].array.get().shape, x[0].get().shape)
         x_recon = self.reconstruct(vs, t)
-        plt.imsave("example.png", x[0].get().reshape((3, 32, 32)))
+        plt.imsave("example.png", np.rollaxis(x[0].get(), 0, 3))
         plt.imsave("example_reconstruction.png", np.rollaxis(x_recon[0].array.get(), 0, 3))
-        exit()
         loss = (x_recon - x) ** 2
         return F.sum(loss) / batchsize
 
