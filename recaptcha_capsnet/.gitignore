@@ -99,10 +99,3 @@ ENV/
 
 # mypy
 .mypy_cache/
-
-# vim 
-*.swp
-
-#saved models
-mnist_chainer/saved_model
-recaptcha_capsnet/recpatcha
