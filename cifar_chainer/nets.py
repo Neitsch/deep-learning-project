@@ -4,12 +4,10 @@ import chainer
 from chainer import cuda
 import chainer.functions as F
 import chainer.links as L
-
 import matplotlib.pyplot as plt
 
 
 def _augmentation(x):
-    print("NETS.PY AUGMENTATION IS ON")
     xp = cuda.get_array_module(x)
     MAX_SHIFT = 2
     batchsize, ch, h, w = x.shape
@@ -62,11 +60,11 @@ class CapsNet(chainer.Chain):
     def __init__(self, use_reconstruction=False):
         super(CapsNet, self).__init__()
         self.n_iterations = 3  # dynamic routing
-        self.n_grids = 6  # grid width of primary capsules layer
+        self.n_grids = 8  # grid width of primary capsules layer
         self.n_raw_grids = self.n_grids
         self.use_reconstruction = use_reconstruction
         with self.init_scope():
-            self.conv1 = L.Convolution2D(1, 256, ksize=9, stride=1,
+            self.conv1 = L.Convolution2D(3, 256, ksize=9, stride=1,
                                          initialW=init)
             self.conv2 = L.Convolution2D(256, 32 * 8, ksize=9, stride=2,
                                          initialW=init)
@@ -76,7 +74,7 @@ class CapsNet(chainer.Chain):
 
             self.fc1 = L.Linear(16 * 10, 512, initialW=init)
             self.fc2 = L.Linear(512, 1024, initialW=init)
-            self.fc3 = L.Linear(1024, 784, initialW=init)
+            self.fc3 = L.Linear(1024, 3072, initialW=init)
 
         _count_params(self, n_grids=self.n_grids)
         self.results = {'N': 0, 'loss': [], 'correct': [],
@@ -107,12 +105,10 @@ class CapsNet(chainer.Chain):
         batchsize = x.shape[0]
         n_iters = self.n_iterations
         gg = self.n_grids * self.n_grids
-        #print("X: ", x.shape)
+
         # h1 = F.relu(self.conv1(x))
         h1 = F.leaky_relu(self.conv1(x), 0.05)
-        #print("H1:", h1.shape)
         h2 = self.conv2(h1)
-        #print("H2:", h2.shape)
         pr_caps = F.split_axis(h2, 32, axis=1)
         # shapes if MNIST. -> if MultiMNIST
         # x (batchsize, 1, 28, 28) -> (:, :, 36, 36)
@@ -122,8 +118,6 @@ class CapsNet(chainer.Chain):
         Preds = []
         for i in range(32):
             pred = self.Ws[i](pr_caps[i])
-            #print("Caps[i]:", pr_caps[i].shape)
-            #print("Pred:", pred.shape)
             Pred = pred.reshape((batchsize, 16, 10, gg))
             Preds.append(Pred)
         Preds = F.stack(Preds, axis=3)
@@ -158,7 +152,9 @@ class CapsNet(chainer.Chain):
         x_recon = F.sigmoid(
             self.fc3(F.relu(
                 self.fc2(F.relu(
-                    self.fc1(masked_vs)))))).reshape((batchsize, 1, 28, 28))
+                    self.fc1(masked_vs))))))
+        print("Recon:", x_recon.shape)
+        x_recon = x_recon.reshape((batchsize, 3, 32, 32))
         return x_recon
 
     def calculate_loss(self, vs_norm, t, vs, x):
@@ -186,11 +182,11 @@ class CapsNet(chainer.Chain):
 
     def calculate_reconstruction_loss(self, vs, t, x):
         batchsize = t.shape[0]
+        print("x: ",  x[0].get().shape)
+        #print("x_recon: ", x_recon[0].array.get().shape, x[0].get().shape)
         x_recon = self.reconstruct(vs, t)
-        #print("x_recon: ", x_recon[0].array.get().reshape((28, 28)).shape, x_recon[0].array.get().reshape((28, 28)).dtype, type(x_recon[0].array.get().reshape((28, 28))) )
-        plt.imsave("example.png", x[0].get().reshape((28, 28)), cmap='Greys')
-        plt.imsave("example_reconstruction.png", x_recon[0].array.get().reshape((28, 28)), cmap='Greys')
-        #exit()
+        plt.imsave("example.png", np.rollaxis(x[0].get(), 0, 3))
+        plt.imsave("example_reconstruction.png", np.rollaxis(x_recon[0].array.get(), 0, 3))
         loss = (x_recon - x) ** 2
         return F.sum(loss) / batchsize
 
