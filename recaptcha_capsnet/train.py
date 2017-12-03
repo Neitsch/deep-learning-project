@@ -13,6 +13,7 @@ from chainer import serializers
 import matplotlib.pyplot as plt
 import nets
 from chainer.datasets import tuple_dataset
+from keras.preprocessing.image import ImageDataGenerator
 recaptcha_folder = os.path.join('.', 'recpatcha','train')
 def get_recaptcha():
     #np.set_printoptions(threshold=np.nan)
@@ -27,15 +28,45 @@ def get_recaptcha():
                 img = img /255.0
                 img = img[40:140, 40:140]
                 #print(img.shape)
+                img = scipy.misc.imresize(img, [28,28])
                 #plt.imshow(img)
                 #plt.show()
-                img = scipy.misc.imresize(img, [28,28])
-                img = np.reshape(img, [1, 28, 28])
+                img = np.reshape(img, [28, 28, 1])
                 train_images.append(img.astype('float32'))
                 train_labels.append(label_index)
-             
-    train = tuple_dataset.TupleDataset(train_images, train_labels)
-    return train
+
+    train_images = np.array(train_images)
+    train_labels = np.array(train_labels)
+    
+    datagenArgs = {
+        'shear_range': 1.0,
+        'zoom_range' : 0.5,
+        'rotation_range': 15,
+    }
+    print("data argument prarams: {}".format(datagenArgs))
+    datagen = ImageDataGenerator( **datagenArgs)
+    
+    times = 0
+    image_arg = []
+    label_arg = []
+    for x_batch, y_batch in datagen.flow(train_images, train_labels,  batch_size=len(train_labels),  shuffle=False, seed=0):
+        for x in x_batch:
+            image_arg.append(x/255.0)
+            #plt.imshow(x[:,:,0]/255.0)
+            #plt.show()
+        for y in y_batch:
+            label_arg.append(y)
+        times += 1
+        if times > 200:
+            break
+    image_arg_trans = []
+    for image in image_arg:
+        image_arg_trans.append(np.resize(image, (1,28,28)))
+    print(len(image_arg_trans))
+    print(len(label_arg))
+    train = tuple_dataset.TupleDataset(image_arg_trans[0:10000], label_arg[0:10000])
+    test = tuple_dataset.TupleDataset(image_arg_trans[10000:], label_arg[10000:])
+    return train,test
       
 
 def main():
@@ -67,10 +98,10 @@ def main():
     optimizer.setup(model)
 
     # Load the MNIST dataset
-    train = get_recaptcha()
+    train,test = get_recaptcha()
 
     train_iter = chainer.iterators.SerialIterator(train, args.batchsize)
-    test_iter = chainer.iterators.SerialIterator(train, 10,
+    test_iter = chainer.iterators.SerialIterator(test, 10,
                                                  repeat=False, shuffle=False)
 
     def report(epoch, result):
