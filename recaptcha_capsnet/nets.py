@@ -59,7 +59,7 @@ class CapsNet(chainer.Chain):
     def __init__(self, use_reconstruction=False):
         super(CapsNet, self).__init__()
         self.n_iterations = 3  # dynamic routing
-        self.n_grids = 26  # grid width of primary capsules layer
+        self.n_grids = 6  # grid width of primary capsules layer
         self.n_raw_grids = self.n_grids
         self.use_reconstruction = use_reconstruction
         with self.init_scope():
@@ -68,10 +68,10 @@ class CapsNet(chainer.Chain):
             self.conv2 = L.Convolution2D(256, 32 * 8, ksize=9, stride=2,
                                          initialW=init)
             self.Ws = chainer.ChainList(
-                *[L.Convolution2D(8, 16 * 10, ksize=1, stride=1, initialW=init)
+                *[L.Convolution2D(8, 16 * 26, ksize=1, stride=1, initialW=init)
                   for i in range(32)])
 
-            self.fc1 = L.Linear(16 * 10, 512, initialW=init)
+            self.fc1 = L.Linear(16 * 26, 512, initialW=init)
             self.fc2 = L.Linear(512, 1024, initialW=init)
             self.fc3 = L.Linear(1024, 784, initialW=init)
 
@@ -116,25 +116,25 @@ class CapsNet(chainer.Chain):
         Preds = []
         for i in range(32):
             pred = self.Ws[i](pr_caps[i])
-            Pred = pred.reshape((batchsize, 16, 10, gg))
+            Pred = pred.reshape((batchsize, 16, 26, gg))
             Preds.append(Pred)
         Preds = F.stack(Preds, axis=3)
-        assert(Preds.shape == (batchsize, 16, 10, 32, gg))
+        assert(Preds.shape == (batchsize, 16, 26, 32, gg))
 
-        bs = self.xp.zeros((batchsize, 10, 32, gg), dtype='f')
+        bs = self.xp.zeros((batchsize, 26, 32, gg), dtype='f')
         for i_iter in range(n_iters):
             cs = F.softmax(bs, axis=1)
             Cs = F.broadcast_to(cs[:, None], Preds.shape)
-            assert(Cs.shape == (batchsize, 16, 10, 32, gg))
+            assert(Cs.shape == (batchsize, 16, 26, 32, gg))
             ss = F.sum(Cs * Preds, axis=(3, 4))
             vs = squash(ss)
-            assert(vs.shape == (batchsize, 16, 10))
+            assert(vs.shape == (batchsize, 16, 26))
 
             if i_iter != n_iters - 1:
                 Vs = F.broadcast_to(vs[:, :, :, None, None], Preds.shape)
-                assert(Vs.shape == (batchsize, 16, 10, 32, gg))
+                assert(Vs.shape == (batchsize, 16, 26, 32, gg))
                 bs = bs + F.sum(Vs * Preds, axis=1)
-                assert(bs.shape == (batchsize, 10, 32, gg))
+                assert(bs.shape == (batchsize, 26, 32, gg))
 
         vs_norm = get_norm(vs)
         return vs_norm, vs
