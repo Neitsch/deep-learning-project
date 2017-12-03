@@ -25,8 +25,10 @@ def get_recaptcha():
                 img = scipy.misc.imread(os.path.join(recaptcha_folder, label, filename))
                 img = 255 - img
                 img = img /255.0
+                img = scipy.misc.imresize(img, [28,28])
                 #plt.imshow(img)
                 #plt.show()
+                img = np.reshape(img, [1, 28, 28])
                 train_images.append(img.astype('float32'))
                 train_labels.append(label_index)
              
