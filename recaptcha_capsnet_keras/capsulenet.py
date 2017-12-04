@@ -24,6 +24,7 @@ from capsulelayers import CapsuleLayer, PrimaryCap, Length, Mask
 import scipy
 import os
 from keras.preprocessing.image import ImageDataGenerator
+import matplotlib.pyplot as plt
 K.set_image_data_format('channels_last')
 recaptcha_folder = os.path.join('.', 'recpatcha','train')
 
@@ -187,11 +188,11 @@ def load_recaptcha():
                 #plt.show()
                 #print(noexist)
                 #print(img.shape)
-                img = scipy.misc.imresize(img, [30,60])
+                img = scipy.misc.imresize(img, [30,30])
                 #plt.imshow(img)
                 #plt.show()
                 #print(noexist)
-                img = np.reshape(img, [30, 60, 1])
+                img = np.reshape(img, [30, 30, 1])
                 train_images.append(img.astype('float32'))
                 train_labels.append(label_index)
 
@@ -209,7 +210,7 @@ def load_recaptcha():
     times = 0
     image_arg = []
     label_arg = []
-    for x_batch, y_batch in datagen.flow(train_images, train_labels,  batch_size=len(train_labels),  shuffle=False, seed=0):
+    for x_batch, y_batch in datagen.flow(train_images, train_labels,  batch_size=len(train_labels),  shuffle=True, seed=0):
         for x in x_batch:
             image_arg.append(x/255.0)
             #plt.imshow(x[:,:,0]/255.0)
@@ -217,14 +218,26 @@ def load_recaptcha():
         for y in y_batch:
             label_arg.append(y)
         times += 1
-        if times > 200:
+        if times > 2:
             break
-
-    x_train = np.array(image_arg[0:10000])
-    y_train = to_categorical(np.array(label_arg[0:10000]))
+    concat_imgs = []
+    concat_labels = []
+    for index1, image1 in enumerate(image_arg):
+        for index2, image2 in enumerate(image_arg):
+            new_img = np.concatenate((image1, image2), axis=1)
+            concat_imgs.append(new_img)
+            label = label_arg[index1] * 26 + label_arg[index2]
+            concat_labels.append(label)
+            #plt.imshow(new_img[:,:,0])
+            #plt.show()
+            #print(noexist)
+            
+    print(np.array(concat_imgs).shape)
+    x_train = np.array(concat_imgs[0:10000])
+    y_train = to_categorical(np.array(concat_labels[0:10000]), num_classes=26*26)
     
-    x_test = np.array(image_arg[10000:])
-    y_test = to_categorical(np.array(label_arg[10000:]))
+    x_test = np.array(concat_imgs[10000:11000])
+    y_test = to_categorical(np.array(concat_labels[10000:11000]),num_classes=26*26)
     
     #train = tuple_dataset.TupleDataset(image_arg[0:10000], label_arg[0:10000])
     #test = tuple_dataset.TupleDataset(image_arg[10000:], label_arg[10000:])
@@ -273,7 +286,7 @@ if __name__ == "__main__":
     # define model
     print(len(np.unique(np.argmax(y_train, 1))))
     model, eval_model = CapsNet(input_shape=x_train.shape[1:],
-                                n_class=len(np.unique(np.argmax(y_train, 1))),
+                                n_class=26*26,
                                 num_routing=args.routings)
     model.summary()
 
