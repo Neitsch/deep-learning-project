@@ -105,3 +105,4 @@ ENV/
 
 #saved models
 mnist_chainer/saved_model
+*.DS_Store

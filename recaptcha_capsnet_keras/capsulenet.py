@@ -21,9 +21,11 @@ from keras import layers, models, optimizers
 from keras import backend as K
 from keras.utils import to_categorical
 from capsulelayers import CapsuleLayer, PrimaryCap, Length, Mask
-
+import scipy
+import os
+from keras.preprocessing.image import ImageDataGenerator
 K.set_image_data_format('channels_last')
-
+recaptcha_folder = os.path.join('.', 'recpatcha','train')
 
 def CapsNet(input_shape, n_class, num_routing):
     """
@@ -169,7 +171,65 @@ def load_mnist():
     y_test = to_categorical(y_test.astype('float32'))
     return (x_train, y_train), (x_test, y_test)
 
+def load_recaptcha():
+    #np.set_printoptions(threshold=np.nan)
+    train_images = []
+    train_labels = []
 
+    for label_index, label in enumerate(os.listdir(recaptcha_folder)):
+        for filename in os.listdir(os.path.join(recaptcha_folder, label)):
+            if 'upper' in filename:
+                img = scipy.misc.imread(os.path.join(recaptcha_folder, label, filename))
+                img = 255 - img
+                img = img /255.0
+                img = img[40:140, :]
+                #plt.imshow(img)
+                #plt.show()
+                #print(noexist)
+                #print(img.shape)
+                img = scipy.misc.imresize(img, [30,60])
+                #plt.imshow(img)
+                #plt.show()
+                #print(noexist)
+                img = np.reshape(img, [30, 60, 1])
+                train_images.append(img.astype('float32'))
+                train_labels.append(label_index)
+
+    train_images = np.array(train_images)
+    train_labels = np.array(train_labels)
+    
+    datagenArgs = {
+        'shear_range': 1.0,
+        'zoom_range' : 0.5,
+        'rotation_range': 15,
+    }
+    print("data argument prarams: {}".format(datagenArgs))
+    datagen = ImageDataGenerator( **datagenArgs)
+    
+    times = 0
+    image_arg = []
+    label_arg = []
+    for x_batch, y_batch in datagen.flow(train_images, train_labels,  batch_size=len(train_labels),  shuffle=False, seed=0):
+        for x in x_batch:
+            image_arg.append(x/255.0)
+            #plt.imshow(x[:,:,0]/255.0)
+            #plt.show()
+        for y in y_batch:
+            label_arg.append(y)
+        times += 1
+        if times > 200:
+            break
+
+    x_train = np.array(image_arg[0:10000])
+    y_train = to_categorical(np.array(label_arg[0:10000]))
+    
+    x_test = np.array(image_arg[10000:])
+    y_test = to_categorical(np.array(label_arg[10000:]))
+    
+    #train = tuple_dataset.TupleDataset(image_arg[0:10000], label_arg[0:10000])
+    #test = tuple_dataset.TupleDataset(image_arg[10000:], label_arg[10000:])
+    return (x_train, y_train), (x_test, y_test)
+      
 
 if __name__ == "__main__":
     import os
@@ -205,12 +265,13 @@ if __name__ == "__main__":
         os.makedirs(args.save_dir)
 
     # load data
-    (x_train, y_train), (x_test, y_test) = load_mnist()
-    #print(y_train[0])
+    (x_train, y_train), (x_test, y_test) = load_recaptcha()
+    print(x_train.shape)
     
     #print(noexist)
 
     # define model
+    print(len(np.unique(np.argmax(y_train, 1))))
     model, eval_model = CapsNet(input_shape=x_train.shape[1:],
                                 n_class=len(np.unique(np.argmax(y_train, 1))),
                                 num_routing=args.routings)
