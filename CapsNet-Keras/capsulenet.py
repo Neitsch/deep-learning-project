@@ -82,7 +82,9 @@ def margin_loss(y_true, y_pred):
     return K.mean(K.sum(L, 1))
 
 def top_two_fun(y_true, y_pred):
-    return metrics.top_k_categorical_accuracy(y_true, y_pred)
+    pred_exp = np.exp(y_pred)
+    acc = np.sum(np.multiply(y_true, pred_exp / np.sum(pred_exp, axis=0))) / y_true.shape[0]
+    return acc
 
 def train(model, data, eval_model, args):
     """
@@ -151,10 +153,9 @@ class TestCallback(Callback):
         x_test, y_test = self.test_data
         #metrics.evaluate(x_test, y_test)
         #print(metrics) 
-        print(dir(self.my_model))
         y_pred, x_recon = self.my_model.predict(x_test)
         loss = top_two_fun(y_test, y_pred)
-        print('\nTesting loss: {}, acc: skipped\n'.format(loss))
+        print('\nTesting loss: {}, acc: skipped000\n'.format(loss))
         return
 
 def test(model, data):
