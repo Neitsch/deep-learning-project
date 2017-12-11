@@ -84,7 +84,7 @@ def margin_loss(y_true, y_pred):
 def top_two_fun(y_true, y_pred):
     return metrics.top_k_categorical_accuracy(y_true, y_pred)
 
-def train(model, data, args):
+def train(model, data, eval_model, args):
     """
     Training a CapsuleNet
     :param model: the CapsuleNet model
@@ -126,7 +126,7 @@ def train(model, data, args):
             yield ([x_batch, y_batch], [y_batch, x_batch])
 
     # Training with data augmentation. If shift_fraction=0., also no augmentation.
-    test_callback = TestCallback(model, (x_test, y_test))
+    test_callback = TestCallback(eval_model, (x_test, y_test))
     model.fit_generator(generator=train_generator(x_train, y_train, args.batch_size, args.shift_fraction),
                         steps_per_epoch=int(y_train.shape[0] / args.batch_size),
                         epochs=args.epochs,
@@ -144,17 +144,17 @@ def train(model, data, args):
 
 class TestCallback(Callback):
     def __init__(self, model, test_data):
-        self.model = model
+        self.my_model = model
         self.test_data = test_data
 
     def on_epoch_end(self, epoch, logs={}):
         x_test, y_test = self.test_data
         #metrics.evaluate(x_test, y_test)
         #print(metrics) 
-        print(dir(self.model))
-        y_pred, x_recon = self.model.predict(x_test, y_test)
+        print(dir(self.my_model))
+        y_pred, x_recon = self.my_model.predict(x_test)
         loss = top_two_fun(y_test, y_pred)
-        print('\nTesting loss: {}, acc: {}\n'.format(loss))
+        print('\nTesting loss: {}, acc: skipped\n'.format(loss))
         return
 
 def test(model, data):
@@ -255,7 +255,7 @@ if __name__ == "__main__":
     if args.weights is not None:  # init the model weights with provided one
         model.load_weights(args.weights)
     if args.is_training:
-        train(model=model, data=((x_train, y_train), (x_test, y_test)), args=args)
+        train(model=model, data=((x_train, y_train), (x_test, y_test)), eval_model=eval_model, args=args)
     else:  # as long as weights are given, will run testing
         if args.weights is None:
             print('No weights are provided. Will test using random initialized weights.')
