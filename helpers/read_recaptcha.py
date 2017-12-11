@@ -63,7 +63,6 @@ def load_recaptcha_test(recaptcha_folder):
         if times > 30:
             break
 
-    test_size = 10 
     
     # TRAINING
     train_set = []
@@ -71,7 +70,7 @@ def load_recaptcha_test(recaptcha_folder):
     for i, img in enumerate(image_arg):
 
         final_image = np.zeros(result_dimention)
-        start_index = random.randint(15, result_dimention[1] - 15)
+        start_index = random.randint(0, result_dimention[1] - img.shape[1])
         width = img.shape[1]
         final_image[:,start_index:start_index + width,0] = img[:,:,0]
         train_set.append(final_image)
@@ -84,6 +83,7 @@ def load_recaptcha_test(recaptcha_folder):
         #plt.show()
 
     # TEST 
+    test_size = 1000 
     current_size = 0
     test_set = []
     test_label = []
