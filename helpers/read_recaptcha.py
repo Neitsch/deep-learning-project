@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from scipy import ndimage
 from keras.preprocessing.image import ImageDataGenerator
 
+result_dimention = (28, 75, 1)
 def toone(a):
     if a > 0:
         return 1.0
@@ -64,6 +65,25 @@ def load_recaptcha_test(recaptcha_folder):
 
     test_size = 10 
     
+    # TRAINING
+    train_set = []
+    train_label = []
+    for i, img in enumerate(image_arg):
+
+        final_image = np.zeros(result_dimention)
+        start_index = random.randint(15, result_dimention[1] - 15)
+        width = img.shape[1]
+        final_image[:,start_index:start_index + width,0] = img[:,:,0]
+        train_set.append(final_image)
+
+        label = np.zeros(26)
+        label[label_arg[i]] = 1
+        train_label.append(label)
+        #print(label)
+        #plt.imshow(final_image[:,:,0])
+        #plt.show()
+
+    # TEST 
     current_size = 0
     test_set = []
     test_label = []
@@ -83,7 +103,7 @@ def load_recaptcha_test(recaptcha_folder):
         distance = random.randint(20,35)
         #print(cof1)
 
-        new_img = np.concatenate((image1, np.zeros((image1.shape[0], int(image1.shape[1]*1.4), image1.shape[2]))), axis=1)
+        new_img = np.concatenate((image1, np.zeros((image1.shape[0], int(result_dimention[1] - image1.shape[1]), result_dimention[2]))), axis=1)
         image_start = int(cof1[1] + distance - cof2[1])
         width = image2.shape[1]
         new_img[:,image_start:image_start + width,0] = np.maximum(new_img[:,image_start:image_start + width,0],image2[:,:,0])
@@ -98,7 +118,7 @@ def load_recaptcha_test(recaptcha_folder):
         #print(label)
         #plt.imshow(new_img[:,:,0])
         #plt.show()
-    return test_set, test_label
+    return (train_set, train_label), (test_set, test_label)
 
 if __name__ == "__main__":
     load_recaptcha_test(os.path.join('..', 'recaptcha_capsnet_keras','recaptcha'))
