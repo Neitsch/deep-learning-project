@@ -185,8 +185,8 @@ def load_mnist():
     #create_rand_multi_mnist
     x_train, y_train = multi_mnist_setup.create_rand_single_mnist(samples=1000)
     x_test, y_test = multi_mnist_setup.create_rand_multi_mnist(samples=100)
-    x_train = x_train.reshape(1000, 28, 112, 1)
-    x_test = x_test.reshape(100, 28, 112, 1)
+    x_train = x_train.reshape(-1, 28, 112, 1).astype('float32') / 255.
+    x_test = x_test.reshape(-1, 28, 112, 1).astype('float32') / 255.
     print(x_train.shape)
     print(y_train.shape)
     print(x_test.shape)
