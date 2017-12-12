@@ -83,9 +83,7 @@ def margin_loss(y_true, y_pred):
     return K.mean(K.sum(L, 1))
 
 def top_two_fun(y_true, y_pred):
-    pred_exp = np.exp(y_pred)
-    acc = np.sum(np.multiply(y_true, pred_exp / np.sum(pred_exp, axis=0))) / y_true.shape[0]
-    return acc
+    return np.sum([(np.intersect1d(x, y) > 0) for (x, y) in zip(np.argsort(y_pred, axis=1)[-2:], np.argsort(y_true, axis=1)[-2:])]) / y_pred.shape[0]
 
 def train(model, data, eval_model, args):
     """
