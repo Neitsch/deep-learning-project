@@ -83,7 +83,14 @@ def margin_loss(y_true, y_pred):
     return K.mean(K.sum(L, 1))
 
 def top_two_fun(y_true, y_pred):
-    return np.sum([(np.intersect1d(x, y) > 0) for (x, y) in zip(np.argsort(y_pred, axis=1)[-2:], np.argsort(y_true, axis=1)[-2:])]) / y_pred.shape[0]
+    top_pred = np.argsort(y_pred, axis=1)[:,-2:]
+    top_true = np.argsort(y_true, axis=1)[:,-2:]
+    zipped = zip(top_pred, top_true)
+    intersect_val = [np.intersect1d(x, y) for (x, y) in zipped]
+    intersect_sizes = [x.size for x in intersect_val]
+    intersect_sum = sum(intersect_sizes)
+    per_batch = intersect_sum / y_pred.shape[0]
+    return per_batch
 
 def train(model, data, eval_model, args):
     """
