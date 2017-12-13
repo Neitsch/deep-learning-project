@@ -162,7 +162,10 @@ def load_recaptcha_test(recaptcha_folder, training_size=10000, test_size=1000, t
 def train_generator(recaptcha_folder, batch_size=100, training_with_two_letter=False, is_test=False):
     while 1:
         [x_batch, y_batch], [_,_2] = load_recaptcha_test(recaptcha_folder, training_size=batch_size, test_size=0, training_with_two_letter=training_with_two_letter)
-        yield ([x_batch, y_batch], [y_batch, x_batch])
+        if is_test:
+            yield [x_batch, y_batch], [y_batch, x_batch]
+        else:
+            yield x_batch, y_batch
 
 if __name__ == "__main__":
 

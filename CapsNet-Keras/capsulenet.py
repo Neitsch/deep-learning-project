@@ -23,7 +23,7 @@ from keras.callbacks import Callback
 from keras.utils import to_categorical
 from keras import metrics
 from capsulelayers import CapsuleLayer, PrimaryCap, Length, Mask
-from read_recaptcha import load_recaptcha_test, result_dimention
+from read_recaptcha import load_recaptcha_test, result_dimention, train_generator
 
 K.set_image_data_format('channels_last')
 
@@ -124,18 +124,9 @@ def train(model, data, eval_model, args):
               validation_data=[[x_test, y_test], [y_test, x_test]], callbacks=[log, tb, checkpoint, lr_decay])
     """
 
-    # Begin: Training with data augmentation ---------------------------------------------------------------------#
-    def train_generator(x, y, batch_size, shift_fraction=0.):
-        train_datagen = ImageDataGenerator(width_shift_range=shift_fraction,
-                                           height_shift_range=shift_fraction)  # shift up to 2 pixel for MNIST
-        generator = train_datagen.flow(x, y, batch_size=batch_size)
-        while 1:
-            x_batch, y_batch = generator.next()
-            yield ([x_batch, y_batch], [y_batch, x_batch])
-
     # Training with data augmentation. If shift_fraction=0., also no augmentation.
     test_callback = TestCallback(eval_model, (x_test, y_test))
-    model.fit_generator(generator=train_generator(x_train, y_train, args.batch_size, args.shift_fraction),
+    model.fit_generator(generator=train_generator('../recaptcha_capsnet_keras/recaptcha', args.batch_size, False, True),
                         steps_per_epoch=int(y_train.shape[0] / args.batch_size),
                         epochs=args.epochs,
                         validation_data=[[x_test, y_test], [y_test, x_test]],
