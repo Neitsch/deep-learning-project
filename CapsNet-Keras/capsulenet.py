@@ -23,6 +23,7 @@ from keras.callbacks import Callback
 from keras.utils import to_categorical
 from keras import metrics
 from capsulelayers import CapsuleLayer, PrimaryCap, Length, Mask
+from read_recaptcha import load_recaptcha_test, result_dimention
 
 K.set_image_data_format('channels_last')
 
@@ -82,9 +83,14 @@ def margin_loss(y_true, y_pred):
     return K.mean(K.sum(L, 1))
 
 def top_two_fun(y_true, y_pred):
-    pred_exp = np.exp(y_pred)
-    acc = np.sum(np.multiply(y_true, pred_exp / np.sum(pred_exp, axis=0))) / y_true.shape[0]
-    return acc
+    top_pred = np.argsort(y_pred, axis=1)[:,-2:]
+    top_true = np.argsort(y_true, axis=1)[:,-2:]
+    zipped = zip(top_pred, top_true)
+    intersect_val = [np.intersect1d(x, y) for (x, y) in zipped]
+    intersect_sizes = [x.size for x in intersect_val]
+    intersect_sum = sum(intersect_sizes)
+    per_batch = intersect_sum / y_pred.shape[0]
+    return per_batch
 
 def train(model, data, eval_model, args):
     """
@@ -185,8 +191,8 @@ def load_mnist():
     #create_rand_multi_mnist
     x_train, y_train = multi_mnist_setup.create_rand_single_mnist(samples=50000)
     x_test, y_test = multi_mnist_setup.create_rand_multi_mnist(samples=1000, dataset="testing")
-    x_train = x_train.reshape(-1, 28, 112, 1).astype('float32') / 255.
-    x_test = x_test.reshape(-1, 28, 112, 1).astype('float32') / 255.
+    x_train = x_train.reshape(-1, 28, result_dimention[1], 1).astype('float32')
+    x_test = x_test.reshape(-1, 28, result_dimention[1], 1).astype('float32')
     print(x_train.shape)
     print(y_train.shape)
     print(x_test.shape)
@@ -244,8 +250,14 @@ if __name__ == "__main__":
         os.makedirs(args.save_dir)
 
     # load data
-    (x_train, y_train), (x_test, y_test) = load_mnist()
-
+#    (x_train, y_train), (x_test, y_test) = load_mnist()
+    print("Gonan load")
+    (x_train, y_train), (x_test, y_test) = load_recaptcha_test('../recaptcha_capsnet_keras/recaptcha')
+    print("Did load")
+    print(x_train.shape)
+    print(y_train.shape)
+    print(x_test.shape)
+    print(y_test.shape)
     # define model
     model, eval_model = CapsNet(input_shape=x_train.shape[1:],
                                 n_class=len(np.unique(np.argmax(y_train, 1))),
