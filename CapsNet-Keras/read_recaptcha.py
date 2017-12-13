@@ -15,7 +15,7 @@ def toone(a):
     else:
         return 0.0
 
-def load_recaptcha_test(recaptcha_folder):
+def load_recaptcha_test(recaptcha_folder, training_with_two_letter=False):
     train_images = []
     train_labels = []
 
@@ -60,34 +60,36 @@ def load_recaptcha_test(recaptcha_folder):
         for y in y_batch:
             label_arg.append(y)
         times += 1
-        if times > 30:
+        if times > 50:
             break
 
     
     # TRAINING
     train_set = []
     train_label = []
-    for i, img in enumerate(image_arg):
+    if not training_with_two_letter:
+        for i, img in enumerate(image_arg):
 
-        final_image = np.zeros(result_dimention)
-        start_index = random.randint(0, result_dimention[1] - img.shape[1])
-        width = img.shape[1]
-        final_image[:,start_index:start_index + width,0] = img[:,:,0]
-        train_set.append(final_image)
+            final_image = np.zeros(result_dimention)
+            start_index = random.randint(0, result_dimention[1] - img.shape[1])
+            width = img.shape[1]
+            final_image[:,start_index:start_index + width,0] = img[:,:,0]
+            train_set.append(final_image)
 
-        label = np.zeros(26)
-        label[label_arg[i]] = 1
-        train_label.append(label)
-        #print(label)
-        #plt.imshow(final_image[:,:,0])
-        #plt.show()
+            label = np.zeros(26)
+            label[label_arg[i]] = 1
+            train_label.append(label)
+            #print(label)
+            #plt.imshow(final_image[:,:,0])
+            #plt.show()
 
     # TEST 
+    training_size = 10000
     test_size = 1000 
     current_size = 0
     test_set = []
     test_label = []
-    while current_size < test_size:
+    while current_size < test_size :
         i1 = random.randint(0,len(image_arg)-1)
         i2 = random.randint(0,len(image_arg)-1)
         
@@ -119,7 +121,40 @@ def load_recaptcha_test(recaptcha_folder):
         #plt.imshow(new_img[:,:,0])
         #plt.show()
         current_size += 1
+    current_size = 0
+    while training_with_two_letter and current_size < training_size:
+        i1 = random.randint(0,len(image_arg)-1)
+        i2 = random.randint(0,len(image_arg)-1)
+        
+        if label_arg[i1] == label_arg[i2]:
+          continue
+        
+        image1 = image_arg[i1]
+        image2 = image_arg[i2]
+        vfunc = np.vectorize(toone)
+        cof1 = ndimage.measurements.center_of_mass(vfunc(image1[:,:,0]))
+        cof2 = ndimage.measurements.center_of_mass(vfunc(image2[:,:,0]))
+        
+        distance = random.randint(20,35)
+        #print(cof1)
+
+        new_img = np.concatenate((image1, np.zeros((image1.shape[0], int(result_dimention[1] - image1.shape[1]), result_dimention[2]))), axis=1)
+        image_start = int(cof1[1] + distance - cof2[1])
+        width = image2.shape[1]
+        new_img[:,image_start:image_start + width,0] = np.maximum(new_img[:,image_start:image_start + width,0],image2[:,:,0])
+
+        #print(noexist)
+        train_set.append(new_img)
+        
+        label = np.zeros(26)
+        label[label_arg[i1]] = 1
+        label[label_arg[i2]] = 1
+        train_label.append(label)
+        #print(label)
+        #plt.imshow(new_img[:,:,0])
+        #plt.show()
+        current_size += 1
     return (np.array(train_set), np.array(train_label)), (np.array(test_set), np.array(test_label))
 
 if __name__ == "__main__":
-    load_recaptcha_test(os.path.join('..', 'recaptcha_capsnet_keras','recaptcha'))
+    load_recaptcha_test(os.path.join('..', 'recaptcha_capsnet_keras','recaptcha'), training_with_two_letter=True)
