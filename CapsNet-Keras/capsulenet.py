@@ -139,7 +139,7 @@ def train(model, data, eval_model, args):
                         steps_per_epoch=int(y_train.shape[0] / args.batch_size),
                         epochs=args.epochs,
                         validation_data=[[x_test, y_test], [y_test, x_test]],
-                        callbacks=[log, tb, checkpoint, lr_decay, test_callback])
+                        callbacks=[test_callback, log, tb, checkpoint, lr_decay])
     # End: Training with data augmentation -----------------------------------------------------------------------#
 
     model.save_weights(args.save_dir + '/trained_model.h5')
@@ -160,9 +160,10 @@ class TestCallback(Callback):
         #metrics.evaluate(x_test, y_test)
         #print(metrics) 
         y_pred, x_recon = self.my_model.predict(x_test)
-        loss = top_two_fun(y_test, y_pred)
-        print('\nTesting loss: {}, acc: skipped000\n'.format(loss))
-        return
+        acc = top_two_fun(y_test, y_pred)
+        print('\nTesting acc: {}, type: {}, logs: {}, t: {}\n'.format(acc, type(acc), logs, type(logs['capsnet_acc'])))
+        logs['our_acc'] = np.float64(acc)
+        return logs
 
 def test(model, data):
     x_test, y_test = data
