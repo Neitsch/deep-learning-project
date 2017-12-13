@@ -15,7 +15,7 @@ def toone(a):
     else:
         return 0.0
 
-def load_recaptcha_test(recaptcha_folder, training_with_two_letter=False):
+def load_recaptcha_test(recaptcha_folder, training_size=10000, test_size=1000, training_with_two_letter=False):
     train_images = []
     train_labels = []
 
@@ -60,7 +60,7 @@ def load_recaptcha_test(recaptcha_folder, training_with_two_letter=False):
         for y in y_batch:
             label_arg.append(y)
         times += 1
-        if times > 50:
+        if times > training_size/50:
             break
 
     
@@ -70,6 +70,8 @@ def load_recaptcha_test(recaptcha_folder, training_with_two_letter=False):
     if not training_with_two_letter:
         for i, img in enumerate(image_arg):
 
+            if i >= training_size:
+                continue
             final_image = np.zeros(result_dimention)
             start_index = random.randint(0, result_dimention[1] - img.shape[1])
             width = img.shape[1]
@@ -84,8 +86,6 @@ def load_recaptcha_test(recaptcha_folder, training_with_two_letter=False):
             #plt.show()
 
     # TEST 
-    training_size = 10000
-    test_size = 1000 
     current_size = 0
     test_set = []
     test_label = []
@@ -121,6 +121,8 @@ def load_recaptcha_test(recaptcha_folder, training_with_two_letter=False):
         #plt.imshow(new_img[:,:,0])
         #plt.show()
         current_size += 1
+
+    #TRAINING SET
     current_size = 0
     while training_with_two_letter and current_size < training_size:
         i1 = random.randint(0,len(image_arg)-1)
@@ -156,5 +158,20 @@ def load_recaptcha_test(recaptcha_folder, training_with_two_letter=False):
         current_size += 1
     return (np.array(train_set), np.array(train_label)), (np.array(test_set), np.array(test_label))
 
+
+def train_generator(recaptcha_folder, batch_size=100, training_with_two_letter=False, is_test=False):
+    while 1:
+        [x_batch, y_batch], [_,_2] = load_recaptcha_test(recaptcha_folder, training_size=batch_size, test_size=0, training_with_two_letter=training_with_two_letter)
+        yield ([x_batch, y_batch], [y_batch, x_batch])
+
 if __name__ == "__main__":
-    load_recaptcha_test(os.path.join('..', 'recaptcha_capsnet_keras','recaptcha'), training_with_two_letter=True)
+
+    path = os.path.join('..', 'recaptcha_capsnet_keras','recaptcha')
+
+    generator = train_generator(path, training_with_two_letter=True)
+    for ([x,y],[y1,x1]) in generator:
+        for i,image in enumerate(x):
+            print(y[i])
+            plt.imshow(image[:,:,0])
+            plt.show()
+        break
