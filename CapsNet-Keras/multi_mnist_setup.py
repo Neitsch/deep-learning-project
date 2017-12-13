@@ -12,8 +12,8 @@ import random
 from array import array as pyarray
 from numpy import array, int8, uint8, zeros
 
-MIN = 2
-MAX = 2
+MIN = 3
+MAX = 3
 SIZE = 28
 IMAGE_LENGTH = (MAX + 2) * SIZE
 MNIST_SAMPLES = 60000
@@ -181,7 +181,7 @@ def create_rand_multi_mnist(samples=60000, dataset="training", noise=False):
         # 1) Select a number of labels to include (MIN to MAX):
         n_labels = MIN + random.randrange(1 + (MAX - MIN))
         # 2) Randomly select that number of samples from MNIST training set:
-        rand_indices = [random.randrange(MNIST_SAMPLES) for i in range(n_labels)]
+        rand_indices = [random.randrange(labels.shape[0]) for i in range(n_labels)]
         # 3) Create the new label:
         new_label = np.zeros([10])
         for index in rand_indices:
