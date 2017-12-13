@@ -12,8 +12,8 @@ import random
 from array import array as pyarray
 from numpy import array, int8, uint8, zeros
 
-MIN = 3
-MAX = 3
+MIN = 2
+MAX = 2
 SIZE = 28
 IMAGE_LENGTH = (MAX + 2) * SIZE
 MNIST_SAMPLES = 60000
@@ -175,11 +175,12 @@ def create_rand_multi_mnist(samples=60000, dataset="training", noise=False):
     images, labels = load_mnist(dataset)
     new_images = []
     new_labels = []
+    new_ordering = []
 
     # For however many samples...
     for sample in range(samples):
         # 1) Select a number of labels to include (MIN to MAX):
-        n_labels = MIN + random.randrange(1 + (MAX - MIN))
+        n_labels = MAX#MIN + random.randrange(1 + (MAX - MIN))
         # 2) Randomly select that number of samples from MNIST training set:
         rand_indices = [random.randrange(labels.shape[0]) for i in range(n_labels)]
         # 3) Create the new label:
@@ -203,21 +204,24 @@ def create_rand_multi_mnist(samples=60000, dataset="training", noise=False):
             new_image = np.random.randint(256, size=(SIZE, IMAGE_LENGTH))
         else:
             new_image = np.zeros([SIZE, IMAGE_LENGTH])
-
+        local_ordering = []
         for start_pos, index in zip(start_positions, rand_indices):
+            local_ordering.append((index, start_pos))
             for row in range(SIZE):
                 for col in range(SIZE):
                     new_image[row][start_pos + col] = images[index][row][col]
-
+        
         #new_image = new_image.flatten()
-
+        local_ordering.sort(key=lambda x: x[1])
+        local_ordering = [x[0] for x in local_ordering]
+        new_ordering.append([labels[x][0] for x in local_ordering])
         new_images.append(new_image)
         new_labels.append(new_label)
         
     new_images = np.array(new_images)
     new_labels = np.array(new_labels)
-
-    return new_images, new_labels
+    new_ordering = np.array(new_ordering)
+    return new_images, new_labels, new_ordering
 
 """
 if __name__ == "__main__":

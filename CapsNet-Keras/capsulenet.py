@@ -81,9 +81,9 @@ def margin_loss(y_true, y_pred):
 
     return K.mean(K.sum(L, 1))
 
-def new_top_two_fun(y_true, y_pred):
-    top_pred = np.argsort(y_pred, axis=1)[:,-2:]
-    top_true = np.argsort(y_true, axis=1)[:,-2:]
+def new_top_two_fun(y_true, y_pred, num_correct=2):
+    top_pred = np.argsort(y_pred, axis=1)[:,-num_correct:]
+    top_true = np.argsort(y_true, axis=1)[:,-num_correct:]
     zipped = zip(top_pred, top_true)
     intersect_val = [np.intersect1d(x, y) for (x, y) in zipped]
     intersect_sizes = [x.size for x in intersect_val]
@@ -164,7 +164,7 @@ class TestCallback(Callback):
         #metrics.evaluate(x_test, y_test)
         #print(metrics) 
         y_pred, x_recon = self.my_model.predict(x_test)
-        loss = new_top_two_fun(y_test, y_pred)
+        loss = new_top_two_fun(y_test, y_pred, num_correct=1)
         print('\nTesting loss: {}, acc: skipped000\n'.format(loss))
         return
 
@@ -188,48 +188,74 @@ def test(model, data):
     #plt.show()
 
 
-def load_mnist():
-    """
-    import multi_mnist_setup
-    #create_single_mnist
-    #create_rand_single_mnist
-    #create_rand_multi_mnist
-    x_train, y_train = multi_mnist_setup.create_rand_single_mnist(samples=1000)
-    x_test, y_test = multi_mnist_setup.create_rand_multi_mnist(samples=100, dataset="testing")
-    x_train = x_train.reshape(-1, 28, 140, 1).astype('float32') / 255.
-    x_test = x_test.reshape(-1, 28, 140, 1).astype('float32') / 255.
-    print(x_train.shape)
-    print(y_train.shape)
-    print(x_test.shape)
-    print(y_test.shape)
-    return (x_train, y_train), (x_test, y_test)
-    """
-    # the data, shuffled and split between train and test sets
-    from keras.datasets import mnist
-    (x_train, y_train), (x_test, y_test) = mnist.load_data()
+def load_mnist(dataset=0):
+    if dataset == 0:
+        import multi_mnist_setup
+        #create_single_mnist
+        #create_rand_single_mnist
+        #create_rand_multi_mnist
+        x_train, y_train = multi_mnist_setup.create_rand_single_mnist(samples=1000)
+        x_test, y_test, orders = multi_mnist_setup.create_rand_multi_mnist(samples=100, dataset="testing")
+        x_train = x_train.reshape(-1, 28, 112, 1).astype('float32') / 255.
+        x_test = x_test.reshape(-1, 28, 112, 1).astype('float32') / 255.
+        print(x_train.shape)
+        print(y_train.shape)
+        print(x_test.shape)
+        print(y_test.shape)
+        return (x_train, y_train), (x_test, y_test), orders
+    elif dataset ==1:
+        # the data, shuffled and split between train and test sets
+        from keras.datasets import mnist
+        (x_train, y_train), (x_test, y_test) = mnist.load_data()
 
-    x_train = x_train.reshape(-1, 28, 28, 1).astype('float32') / 255.
-    x_test = x_test.reshape(-1, 28, 28, 1).astype('float32') / 255.
-    y_train = to_categorical(y_train.astype('float32'))
-    y_test = to_categorical(y_test.astype('float32'))
-    print(x_train.shape)
-    print(y_train.shape)
-    print(x_test.shape)
-    print(y_train.shape)
-    return (x_train, y_train), (x_test, y_test)
+        x_train = x_train.reshape(-1, 28, 28, 1).astype('float32') / 255.
+        x_test = x_test.reshape(-1, 28, 28, 1).astype('float32') / 255.
+        y_train = to_categorical(y_train.astype('float32'))
+        y_test = to_categorical(y_test.astype('float32'))
+        print(x_train.shape)
+        print(y_train.shape)
+        print(x_test.shape)
+        print(y_train.shape)
+        return (x_train, y_train), (x_test, y_test)
+    else:
+        
+        from fashion import load_fashion_mnist
+        x_train, y_train, _, x_test, y_test, _ = load_fashion_mnist(100, True)
+        print(x_train.shape)
+        print(y_train.shape)
+        print(x_test.shape)
+        print(y_train.shape)
+        y_train = to_categorical(y_train)
+        y_test = to_categorical(y_test)
     
-    """
-    from fashion import load_fashion_mnist
-    x_train, y_train, _, x_test, y_test, _ = load_fashion_mnist(100, True)
-    print(x_train.shape)
-    print(y_train.shape)
-    print(x_test.shape)
-    print(y_train.shape)
-    y_train = to_categorical(y_train)
-    y_test = to_categorical(y_test)
+        return (x_train, y_train), (x_test, y_test)
+
+def scan_accuracy(model, data, true_orders, base_size=28, num_chars = 2):
+    (test_x, test_y) = data
+    #print(test_x.shape)
+    #print(test_y.shape)
+    #print(test_y)
+    all_preds = []
+    for i in range(0, test_x.shape[2]-base_size, 5):
+        sub_imgs = test_x[:,:,i:i+28,:]
+        y_pred, x_recon = model.predict(sub_imgs)
+        all_preds.append(y_pred)
+        
+        #max_pos = np.max(y_pred,0)
+        #print(max_pos)
+        #if y_pred[:, max_pos] > 0.8:
+        #    print(max_pos, end='')
+    all_preds = np.array(all_preds)
+    #print(all_preds.shape)
+    maxes = np.amax(all_preds, axis=0)
+    sorts = np.argsort(maxes, axis=1)[:,-num_chars:]
+    #print(sorts)
+    ordered = [sorted(b_n, key=lambda v: np.argmax(all_preds[:,i,v])) for i, b_n in enumerate(sorts)]
+    print("Character Accuracy: ", np.sum(ordered == true_orders) / true_orders.size)
+    print("CAPTCHA Accuracy: ", np.sum(np.all(ordered == true_orders, axis=1)) / true_orders.shape[0])
+    #print(ordered)
+    #print(true_orders)
     
-    return (x_train, y_train), (x_test, y_test)
-    """
 
 if __name__ == "__main__":
     import os
@@ -249,13 +275,14 @@ if __name__ == "__main__":
     parser.add_argument('--is_training', default=1, type=int)
     parser.add_argument('--weights', default=None)
     parser.add_argument('--lr', default=0.001, type=float)
+    parser.add_argument('--scan_imgs', default=None, type=int)
     args = parser.parse_args()
     print(args)
     if not os.path.exists(args.save_dir):
         os.makedirs(args.save_dir)
 
     # load data
-    (x_train, y_train), (x_test, y_test) = load_mnist()
+    (x_train, y_train), (x_test, y_test) = load_mnist(1)
 
     # define model
     model, eval_model = CapsNet(input_shape=x_train.shape[1:],
@@ -271,4 +298,9 @@ if __name__ == "__main__":
     else:  # as long as weights are given, will run testing
         if args.weights is None:
             print('No weights are provided. Will test using random initialized weights.')
-        test(model=eval_model, data=(x_test, y_test))
+        else:
+            if args.scan_imgs is None:
+                test(model=eval_model, data=(x_test, y_test))
+            else:
+                (multi_x_train, multi_y_train), (multi_x_test, multi_y_test), orders = load_mnist(0)
+                scan_accuracy(eval_model, data=(multi_x_test, multi_y_test), true_orders=orders)
