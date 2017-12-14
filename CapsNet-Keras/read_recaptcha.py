@@ -59,6 +59,14 @@ def captcha_generator(recaptcha_folder, number_letters, batch_size, is_test, **d
         else:
             yield batch_x, y_batch
 
+def train_generator(recaptcha_folder, batch_size=100, training_with_two_letter=False, is_test=False, character_distance=-1):
+    while 1:
+        [x_batch, y_batch], [_,_2] = load_recaptcha_test(recaptcha_folder, training_size=batch_size, test_size=0, training_with_two_letter=training_with_two_letter, character_distance=character_distance)
+        if is_test:
+            yield [x_batch, y_batch], [y_batch, x_batch]
+        else:
+            yield x_batch, y_batch
+
 if __name__ == "__main__":
     x, y = next(captcha_generator(os.path.join('..', 'recaptcha_capsnet_keras','recaptcha'), 2, 1, False))
     print(x.shape)

@@ -115,6 +115,7 @@ def load_recaptcha_test(recaptcha_folder):
         label[label_arg[i1]] = 1
         label[label_arg[i2]] = 1
         test_label.append(label)
+        current_size += 1
         #print(label)
         #plt.imshow(new_img[:,:,0])
         #plt.show()
