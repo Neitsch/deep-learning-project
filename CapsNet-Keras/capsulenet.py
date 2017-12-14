@@ -23,7 +23,7 @@ from keras.callbacks import Callback
 from keras.utils import to_categorical
 from keras import metrics
 from capsulelayers import CapsuleLayer, PrimaryCap, Length, Mask
-from read_recaptcha import load_recaptcha_test, result_dimention
+from read_recaptcha import captcha_generator, result_dimention
 
 K.set_image_data_format('channels_last')
 
@@ -92,7 +92,7 @@ def top_two_fun(y_true, y_pred):
     per_batch = intersect_sum / y_pred.shape[0]
     return per_batch
 
-def train(model, data, eval_model, args):
+def train(model, eval_model, args):
     """
     Training a CapsuleNet
     :param model: the CapsuleNet model
@@ -101,7 +101,6 @@ def train(model, data, eval_model, args):
     :return: The trained model
     """
     # unpacking the data
-    (x_train, y_train), (x_test, y_test) = data
 
     # callbacks
     log = callbacks.CSVLogger(args.save_dir + '/log.csv')
@@ -120,25 +119,19 @@ def train(model, data, eval_model, args):
 
     """
     # Training without data augmentation:
-    model.fit([x_train, y_train], [y_train, x_train], batch_size=args.batch_size, epochs=args.epochs,
-              validation_data=[[x_test, y_test], [y_test, x_test]], callbacks=[log, tb, checkpoint, lr_decay])
+#    model.fit([x_train, y_train], [y_train, x_train], batch_size=args.batch_size, epochs=args.epochs,
+#              validation_data=[[x_test, y_test], [y_test, x_test]], callbacks=[log, tb, checkpoint, lr_decay])
     """
 
-    # Begin: Training with data augmentation ---------------------------------------------------------------------#
-    def train_generator(x, y, batch_size, shift_fraction=0.):
-        train_datagen = ImageDataGenerator(width_shift_range=shift_fraction,
-                                           height_shift_range=shift_fraction)  # shift up to 2 pixel for MNIST
-        generator = train_datagen.flow(x, y, batch_size=batch_size)
-        while 1:
-            x_batch, y_batch = generator.next()
-            yield ([x_batch, y_batch], [y_batch, x_batch])
-
     # Training with data augmentation. If shift_fraction=0., also no augmentation.
-    test_callback = TestCallback(eval_model, (x_test, y_test))
-    model.fit_generator(generator=train_generator(x_train, y_train, args.batch_size, args.shift_fraction),
-                        steps_per_epoch=int(y_train.shape[0] / args.batch_size),
+    training_generator = captcha_generator('../recaptcha_capsnet_keras/recaptcha', 1, args.batch_size, True, rotation_range=15, shear_range=0.2, zoom_range=0.1)
+    test_callback = TestCallback(eval_model, captcha_generator('../recaptcha_capsnet_keras/recaptcha', 1, args.batch_size, False))
+    model.fit_generator(generator=training_generator,
+                        #train_generator(x_train, y_train, args.batch_size, args.shift_fraction),
+                        steps_per_epoch=10,
                         epochs=args.epochs,
-                        validation_data=[[x_test, y_test], [y_test, x_test]],
+                        validation_data=training_generator,
+                        validation_steps=1,
                         callbacks=[test_callback, log, tb, checkpoint, lr_decay])
     # End: Training with data augmentation -----------------------------------------------------------------------#
 
@@ -153,7 +146,7 @@ def train(model, data, eval_model, args):
 class TestCallback(Callback):
     def __init__(self, model, test_data):
         self.my_model = model
-        self.test_data = test_data
+        self.test_data = next(test_data)
 
     def on_epoch_end(self, epoch, logs={}):
         x_test, y_test = self.test_data
@@ -165,8 +158,9 @@ class TestCallback(Callback):
         logs['our_acc'] = np.float64(acc)
         return logs
 
-def test(model, data):
-    x_test, y_test = data
+def test(model):
+    generator = captcha_generator('../recaptcha_capsnet_keras/recaptcha', 1, args.batch_size, False)
+    x_test, y_test = next(generator)
     y_pred, x_recon = model.predict(x_test, batch_size=100)
     print('-'*50)
     print('Test acc:', np.sum(np.argmax(y_pred, 1) == np.argmax(y_test, 1))/y_test.shape[0])
@@ -235,7 +229,7 @@ if __name__ == "__main__":
     # setting the hyper parameters
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('--batch_size', default=100, type=int)
+    parser.add_argument('--batch_size', default=54, type=int)
     parser.add_argument('--epochs', default=50, type=int)
     parser.add_argument('--lam_recon', default=0.392, type=float)  # 784 * 0.0005, paper uses sum of SE, here uses MSE
     parser.add_argument('--num_routing', default=3, type=int)  # num_routing should > 0
@@ -250,18 +244,9 @@ if __name__ == "__main__":
     if not os.path.exists(args.save_dir):
         os.makedirs(args.save_dir)
 
-    # load data
-#    (x_train, y_train), (x_test, y_test) = load_mnist()
-    print("Gonan load")
-    (x_train, y_train), (x_test, y_test) = load_recaptcha_test('../recaptcha_capsnet_keras/recaptcha')
-    print("Did load")
-    print(x_train.shape)
-    print(y_train.shape)
-    print(x_test.shape)
-    print(y_test.shape)
     # define model
-    model, eval_model = CapsNet(input_shape=x_train.shape[1:],
-                                n_class=len(np.unique(np.argmax(y_train, 1))),
+    model, eval_model = CapsNet(input_shape=result_dimention,
+                                n_class=26,
                                 num_routing=args.num_routing)
     model.summary()
 
@@ -269,8 +254,8 @@ if __name__ == "__main__":
     if args.weights is not None:  # init the model weights with provided one
         model.load_weights(args.weights)
     if args.is_training:
-        train(model=model, data=((x_train, y_train), (x_test, y_test)), eval_model=eval_model, args=args)
+        train(model=model, eval_model=eval_model, args=args)
     else:  # as long as weights are given, will run testing
         if args.weights is None:
             print('No weights are provided. Will test using random initialized weights.')
-        test(model=eval_model, data=(x_test, y_test))
+        test(model=eval_model)
