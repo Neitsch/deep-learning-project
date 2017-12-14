@@ -15,7 +15,7 @@ def toone(a):
     else:
         return 0.0
 
-def load_recaptcha_test(recaptcha_folder, training_size=10000, test_size=1000, training_with_two_letter=False):
+def load_recaptcha_test(recaptcha_folder, training_size=10000, test_size=1000, training_with_two_letter=False, character_distance=-1):
     train_images = []
     train_labels = []
 
@@ -102,7 +102,11 @@ def load_recaptcha_test(recaptcha_folder, training_size=10000, test_size=1000, t
         cof1 = ndimage.measurements.center_of_mass(vfunc(image1[:,:,0]))
         cof2 = ndimage.measurements.center_of_mass(vfunc(image2[:,:,0]))
         
-        distance = random.randint(20,35)
+        if character_distance < 0:
+            distance = random.randint(20,35)
+        else:
+            distance = character_distance
+
         #print(cof1)
 
         new_img = np.concatenate((image1, np.zeros((image1.shape[0], int(result_dimention[1] - image1.shape[1]), result_dimention[2]))), axis=1)
@@ -137,7 +141,10 @@ def load_recaptcha_test(recaptcha_folder, training_size=10000, test_size=1000, t
         cof1 = ndimage.measurements.center_of_mass(vfunc(image1[:,:,0]))
         cof2 = ndimage.measurements.center_of_mass(vfunc(image2[:,:,0]))
         
-        distance = random.randint(20,35)
+        if character_distance < 0:
+            distance = random.randint(20,35)
+        else:
+            distance = character_distance
         #print(cof1)
 
         new_img = np.concatenate((image1, np.zeros((image1.shape[0], int(result_dimention[1] - image1.shape[1]), result_dimention[2]))), axis=1)
@@ -159,9 +166,9 @@ def load_recaptcha_test(recaptcha_folder, training_size=10000, test_size=1000, t
     return (np.array(train_set), np.array(train_label)), (np.array(test_set), np.array(test_label))
 
 
-def train_generator(recaptcha_folder, batch_size=100, training_with_two_letter=False, is_test=False):
+def train_generator(recaptcha_folder, batch_size=100, training_with_two_letter=False, is_test=False, character_distance=-1):
     while 1:
-        [x_batch, y_batch], [_,_2] = load_recaptcha_test(recaptcha_folder, training_size=batch_size, test_size=0, training_with_two_letter=training_with_two_letter)
+        [x_batch, y_batch], [_,_2] = load_recaptcha_test(recaptcha_folder, training_size=batch_size, test_size=0, training_with_two_letter=training_with_two_letter, character_distance=character_distance)
         if is_test:
             yield [x_batch, y_batch], [y_batch, x_batch]
         else:
@@ -171,8 +178,8 @@ if __name__ == "__main__":
 
     path = os.path.join('..', 'recaptcha_capsnet_keras','recaptcha')
 
-    generator = train_generator(path, training_with_two_letter=True)
-    for ([x,y],[y1,x1]) in generator:
+    generator = train_generator(path, training_with_two_letter=True, character_distance=20, is_test=True)
+    for [x,y],[y1,x1] in generator:
         for i,image in enumerate(x):
             print(y[i])
             plt.imshow(image[:,:,0])
