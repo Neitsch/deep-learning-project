@@ -106,6 +106,7 @@ def train(model, data, eval_model, args):
     """
     # unpacking the data
     (x_train, y_train), (x_test, y_test) = data
+    (_x_train, _y_train), (x_test2, y_test2), ordering = load_mnist(0)
 
     # callbacks
     log = callbacks.CSVLogger(args.save_dir + '/log.csv')
@@ -137,13 +138,14 @@ def train(model, data, eval_model, args):
             x_batch, y_batch = generator.next()
             yield ([x_batch, y_batch], [y_batch, x_batch])
 
+    print(x_train.shape, y_train.shape, x_test.shape, y_test.shape, ordering.shape)
     # Training with data augmentation. If shift_fraction=0., also no augmentation.
-    test_callback = TestCallback(eval_model, (x_test, y_test))
+    test_callback = TestCallback(eval_model, (x_test2, y_test2, ordering))
     model.fit_generator(generator=train_generator(x_train, y_train, args.batch_size, args.shift_fraction),
                         steps_per_epoch=int(y_train.shape[0] / args.batch_size),
                         epochs=args.epochs,
                         validation_data=[[x_test, y_test], [y_test, x_test]],
-                        callbacks=[log, tb, checkpoint, lr_decay, test_callback])
+                        callbacks=[test_callback, log, tb, checkpoint, lr_decay])
     # End: Training with data augmentation -----------------------------------------------------------------------#
 
     model.save_weights(args.save_dir + '/trained_model.h5')
@@ -160,13 +162,16 @@ class TestCallback(Callback):
         self.test_data = test_data
 
     def on_epoch_end(self, epoch, logs={}):
-        x_test, y_test = self.test_data
+        x_test, y_test, ordering = self.test_data
         #metrics.evaluate(x_test, y_test)
         #print(metrics) 
-        y_pred, x_recon = self.my_model.predict(x_test)
-        loss = new_top_two_fun(y_test, y_pred, num_correct=1)
-        print('\nTesting loss: {}, acc: skipped000\n'.format(loss))
-        return
+        scan = scan_accuracy(self.my_model, (x_test, y_test), ordering)
+        #y_pred, x_recon = self.my_model.predict(x_test)
+        #loss = new_top_two_fun(y_test, y_pred, num_correct=2)
+        #print('\nTesting loss: {}, acc: skipped000\n'.format(loss))
+        logs.update(scan)
+        #logs['our_acc'] = np.float64(loss)
+        return logs
 
 def test(model, data):
     x_test, y_test = data
@@ -195,7 +200,7 @@ def load_mnist(dataset=0):
         #create_rand_single_mnist
         #create_rand_multi_mnist
         x_train, y_train = multi_mnist_setup.create_rand_single_mnist(samples=1000)
-        x_test, y_test, orders = multi_mnist_setup.create_rand_multi_mnist(samples=100, dataset="testing")
+        x_test, y_test, orders = multi_mnist_setup.create_rand_multi_mnist(samples=1000, dataset="testing")
         x_train = x_train.reshape(-1, 28, 112, 1).astype('float32') / 255.
         x_test = x_test.reshape(-1, 28, 112, 1).astype('float32') / 255.
         print(x_train.shape)
@@ -238,6 +243,7 @@ def scan_accuracy(model, data, true_orders, base_size=28, num_chars = 2):
     all_preds = []
     for i in range(0, test_x.shape[2]-base_size, 5):
         sub_imgs = test_x[:,:,i:i+28,:]
+        #print(sub_imgs.shape)
         y_pred, x_recon = model.predict(sub_imgs)
         all_preds.append(y_pred)
         
@@ -251,11 +257,16 @@ def scan_accuracy(model, data, true_orders, base_size=28, num_chars = 2):
     sorts = np.argsort(maxes, axis=1)[:,-num_chars:]
     #print(sorts)
     ordered = [sorted(b_n, key=lambda v: np.argmax(all_preds[:,i,v])) for i, b_n in enumerate(sorts)]
-    print("Character Accuracy: ", np.sum(ordered == true_orders) / true_orders.size)
-    print("CAPTCHA Accuracy: ", np.sum(np.all(ordered == true_orders, axis=1)) / true_orders.shape[0])
+    #print("Character Accuracy: ", np.sum(ordered == true_orders) / true_orders.size)
+    #print("CAPTCHA Accuracy: ", np.sum(np.all(ordered == true_orders, axis=1)) / true_orders.shape[0])
     #print(ordered)
     #print(true_orders)
-    
+    #print(ordered.shape)
+    return {
+        'character_acc': np.float64(np.sum(ordered == true_orders) / true_orders.size),
+        'captcha_acc': np.float64(np.sum(np.all(ordered == true_orders, axis=1)) / true_orders.shape[0])
+    }
+
 
 if __name__ == "__main__":
     import os
@@ -285,7 +296,7 @@ if __name__ == "__main__":
     (x_train, y_train), (x_test, y_test) = load_mnist(1)
 
     # define model
-    model, eval_model = CapsNet(input_shape=x_train.shape[1:],
+    model, eval_model = CapsNet(input_shape=(28, 28, 1),
                                 n_class=len(np.unique(np.argmax(y_train, 1))),
                                 num_routing=args.num_routing)
     model.summary()
