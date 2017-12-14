@@ -14,7 +14,7 @@ def toone(a):
         return 1.0
     else:
         return 0.0
-def read_images_from_disk(recaptcha_folder):
+def load_captchas(recaptcha_folder):
     train_images = []
     train_labels = []
     recaptcha_folder = os.path.join(recaptcha_folder, "train")
@@ -30,8 +30,34 @@ def read_images_from_disk(recaptcha_folder):
                 img = img[int(cog[0])-hl:int(cog[0])+hl, int(cog[1])-hl:int(cog[1]) + hl]
                 img = scipy.misc.imresize(img, [28,28])
                 img = np.reshape(img, [28, 28, 1])
-                train_images.append(img.astype('float32'))
+                train_images.append(img.astype('float32') / 255.0)
                 train_labels.append(ord(label) - ord('A'))
+    train_images = np.array(train_images)
+    train_labels = np.array(train_labels)
+    y_labels = np.zeros((train_labels.shape[0], 26))
+    y_labels[np.arange(train_labels.shape[0]), train_labels] = 1
+    return train_images, y_labels
+
+def read_images_from_disk(recaptcha_folder):
+
+    train_images = []
+    train_labels = []
+    recaptcha_folder = os.path.join(recaptcha_folder, "train")
+    for label_index, label in enumerate(os.listdir(recaptcha_folder)):
+        for filename in os.listdir(os.path.join(recaptcha_folder, label)):
+            if 'upper' in filename:
+                img = scipy.misc.imread(os.path.join(recaptcha_folder, label, filename))
+                img = 255 - img
+                img = img /255.0
+                vfunc = np.vectorize(toone)
+                cog = ndimage.measurements.center_of_mass(vfunc(img))
+                hl = 40
+                img = img[int(cog[0])-hl:int(cog[0])+hl, int(cog[1])-hl:int(cog[1]) + hl]
+                img = scipy.misc.imresize(img, [28,28])
+                img = np.reshape(img, [28, 28, 1])
+                train_images.append(img.astype('float32') / 255.0)
+                train_labels.append(ord(label) - ord('A'))
+
     return np.array(train_images), np.array(train_labels)
 
 def load_recaptcha_test(base_images, base_labels, training_size=10000, test_size=1000, training_with_two_letter=False, character_distance=-1):
@@ -108,57 +134,26 @@ def load_recaptcha_test(base_images, base_labels, training_size=10000, test_size
         width = image2.shape[1]
         new_img[:,image_start:image_start + width,0] = np.maximum(new_img[:,image_start:image_start + width,0],image2[:,:,0])
 
-        #print(noexist)
-        test_set.append(new_img)
-        
-        label = np.zeros(26)
-        label[label_arg[i1]] = 1
-        label[label_arg[i2]] = 1
-        test_label.append(label)
-        #print(label)
-        #plt.imshow(new_img[:,:,0])
-        #plt.show()
-        current_size += 1
 
-    #TRAINING SET
-    current_size = 0
-    while training_with_two_letter and current_size < training_size:
-        i1 = random.randint(0,len(image_arg)-1)
-        i2 = random.randint(0,len(image_arg)-1)
-        
-        if label_arg[i1] == label_arg[i2]:
-          continue
-        
-        image1 = image_arg[i1]
-        image2 = image_arg[i2]
-        vfunc = np.vectorize(toone)
-        cof1 = ndimage.measurements.center_of_mass(vfunc(image1[:,:,0]))
-        cof2 = ndimage.measurements.center_of_mass(vfunc(image2[:,:,0]))
-        
-        if character_distance < 0:
-            distance = random.randint(20,35)
+def captcha_generator(recaptcha_folder, number_letters, batch_size, is_test, **datagen_args):
+    images, labels = load_captchas(recaptcha_folder)
+    datagen = ImageDataGenerator(**datagen_args).flow(images, labels, batch_size=(number_letters * batch_size), shuffle=True, seed=0)
+    while 1:
+        x_batch, y_batch = next(datagen)
+        batch_x = []
+        images_per_batch = x_batch.reshape((-1, number_letters) + images[0].shape)
+        for i in range(images_per_batch.shape[0]):
+            img = np.zeros(result_dimention)
+            for my_img in images_per_batch[i]:
+                x, y = np.random.randint(0, img.shape[1] - my_img.shape[1] + 1), np.random.randint(0, img.shape[0] - my_img.shape[0] + 1)
+                img[y:(y+my_img.shape[1]), x:(x+my_img.shape[0])] += my_img
+            batch_x.append(np.clip(img, 0, 1))
+        batch_x = np.array(batch_x)
+        y_batch = y_batch.reshape((-1, number_letters, 26)).sum(axis=1)
+        if is_test:
+            yield [batch_x, y_batch], [y_batch, batch_x]
         else:
-            distance = character_distance
-        #print(cof1)
-
-        new_img = np.concatenate((image1, np.zeros((image1.shape[0], int(result_dimention[1] - image1.shape[1]), result_dimention[2]))), axis=1)
-        image_start = int(cof1[1] + distance - cof2[1])
-        width = image2.shape[1]
-        new_img[:,image_start:image_start + width,0] = np.maximum(new_img[:,image_start:image_start + width,0],image2[:,:,0])
-
-        #print(noexist)
-        train_set.append(new_img)
-        
-        label = np.zeros(26)
-        label[label_arg[i1]] = 1
-        label[label_arg[i2]] = 1
-        train_label.append(label)
-        #print(label)
-        #plt.imshow(new_img[:,:,0])
-        #plt.show()
-        current_size += 1
-    return (np.array(train_set), np.array(train_label)), (np.array(test_set), np.array(test_label))
-
+            yield batch_x, y_batch
 
 class train_generator(object):
     def __init__(self, recaptcha_folder, batch_size=100, training_with_two_letter=False, is_test=False, character_distance=-1):
@@ -181,6 +176,12 @@ class train_generator(object):
 
 
 if __name__ == "__main__":
+    """
+    x, y = next(captcha_generator(os.path.join('..', 'recaptcha_capsnet_keras','recaptcha'), 2, 1, False))
+    print(x.shape)
+    plt.imsave("pic.jpg", x[0].reshape(28,75))
+    print(y)
+    """
 
     path = os.path.join('..', 'recaptcha_capsnet_keras','recaptcha')
 
@@ -191,3 +192,4 @@ if __name__ == "__main__":
             plt.imshow(image[:,:,0])
             plt.show()
         break
+
