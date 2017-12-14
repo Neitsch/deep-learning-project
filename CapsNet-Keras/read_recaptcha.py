@@ -14,11 +14,9 @@ def toone(a):
         return 1.0
     else:
         return 0.0
-
-def load_recaptcha_test(recaptcha_folder, training_size=10000, test_size=1000, training_with_two_letter=False, character_distance=-1):
+def read_images_from_disk(recaptcha_folder):
     train_images = []
     train_labels = []
-
     recaptcha_folder = os.path.join(recaptcha_folder, "train")
     for label_index, label in enumerate(os.listdir(recaptcha_folder)):
         for filename in os.listdir(os.path.join(recaptcha_folder, label)):
@@ -30,20 +28,16 @@ def load_recaptcha_test(recaptcha_folder, training_size=10000, test_size=1000, t
                 cog = ndimage.measurements.center_of_mass(vfunc(img))
                 hl = 40
                 img = img[int(cog[0])-hl:int(cog[0])+hl, int(cog[1])-hl:int(cog[1]) + hl]
-                #plt.imshow(img)
-                #plt.show()
-                #print(noexist)
-                #print(img.shape)
                 img = scipy.misc.imresize(img, [28,28])
-                #plt.imshow(img)
-                #plt.show()
-                #print(noexist)
                 img = np.reshape(img, [28, 28, 1])
                 train_images.append(img.astype('float32'))
                 train_labels.append(ord(label) - ord('A'))
+    return np.array(train_images), np.array(train_labels)
 
-    train_images = np.array(train_images)
-    train_labels = np.array(train_labels)
+def load_recaptcha_test(base_images, base_labels, training_size=10000, test_size=1000, training_with_two_letter=False, character_distance=-1):
+
+    train_images = base_images
+    train_labels = base_labels
     
     datagenArgs = {
         'shear_range': 0.5,
@@ -166,19 +160,31 @@ def load_recaptcha_test(recaptcha_folder, training_size=10000, test_size=1000, t
     return (np.array(train_set), np.array(train_label)), (np.array(test_set), np.array(test_label))
 
 
-def train_generator(recaptcha_folder, batch_size=100, training_with_two_letter=False, is_test=False, character_distance=-1):
-    while 1:
-        [x_batch, y_batch], [_,_2] = load_recaptcha_test(recaptcha_folder, training_size=batch_size, test_size=0, training_with_two_letter=training_with_two_letter, character_distance=character_distance)
-        if is_test:
-            yield [x_batch, y_batch], [y_batch, x_batch]
+class train_generator(object):
+    def __init__(self, recaptcha_folder, batch_size=100, training_with_two_letter=False, is_test=False, character_distance=-1):
+        self.batch_size = batch_size
+        self.training_with_two_letter= training_with_two_letter
+        self.is_test=is_test
+        self.character_distance = character_distance
+        self.base_images, self.base_labels = read_images_from_disk(recaptcha_folder)
+    def __iter__(self):
+        return self
+    def __next__(self):
+        return self.next()
+    def next(self):
+        [x_batch, y_batch], [_,_2] = load_recaptcha_test(self.base_images, self.base_labels, training_size=self.batch_size, test_size=0, training_with_two_letter=self.training_with_two_letter, character_distance=self.character_distance)
+        if self.is_test:
+            return [x_batch, y_batch], [y_batch, x_batch]
         else:
-            yield x_batch, y_batch
+            return x_batch, y_batch
+
+
 
 if __name__ == "__main__":
 
     path = os.path.join('..', 'recaptcha_capsnet_keras','recaptcha')
 
-    generator = train_generator(path, training_with_two_letter=True, character_distance=20, is_test=True)
+    generator = train_generator(path, training_with_two_letter=True, character_distance=30, is_test=True)
     for [x,y],[y1,x1] in generator:
         for i,image in enumerate(x):
             print(y[i])
