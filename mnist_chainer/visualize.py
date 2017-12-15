@@ -10,9 +10,9 @@ import numpy as np
 import chainer
 from chainer.dataset.convert import concat_examples
 from chainer import serializers
-
+from train import apply_gaussian_noise
 import nets
-
+import csv
 
 def save_images(xs, filename, marked_row=0):
     width = xs[0].shape[0]
@@ -102,16 +102,30 @@ if __name__ == '__main__':
     if args.gpu >= 0:
         chainer.cuda.get_device_from_id(args.gpu).use()
         model.to_gpu()
-    _, test = chainer.datasets.get_mnist(ndim=3)
+    mean = 0.05
+    _, test_base = chainer.datasets.get_mnist(ndim=3)
+    with open('C:\\Users\\tianyu\\Google Drive\\noise_test_normal_training_.csv', 'w', newline='') as csvfile:
+        while mean <= 0.4:
+            mean_str = str(mean).replace('.','_')
+            csvwriter = csv.writer(csvfile)
+            test = apply_gaussian_noise(test_base,mean)
 
-    batch = get_samples(test)
-    x, t = concat_examples(batch, args.gpu)
-
-    with chainer.no_backprop_mode():
-        with chainer.using_config('train', False):
-            visualize_reconstruction(model, x, t)
-            visualize_reconstruction_alldigits(model, x, t)
-            for i in range(10):
-                visualize_reconstruction_tweaked(
-                    model, x[i * 2: i * 2 + 1], t[i * 2: i * 2 + 1],
-                    filename='vis_tweaked{}.png'.format(i))
+            batch = get_samples(test)
+            x, t = concat_examples(batch, args.gpu)
+            model(x,t)
+            result = model.pop_results()
+            print(result['accuracy'])
+            csvwriter.writerow([mean, result['accuracy']])
+            with chainer.no_backprop_mode():
+                with chainer.using_config('train', False):
+                    visualize_reconstruction(model, x, t, 'vis_{}.png'.format(mean_str))
+                    visualize_reconstruction_alldigits(model, x, t, 'vis_all_{}'.format(mean_str))
+                    model(x,t)
+                
+      
+                    
+                #for i in range(10):
+                #    visualize_reconstruction_tweaked(
+                #        model, x[i * 2: i * 2 + 1], t[i * 2: i * 2 + 1],
+                #        filename='vis_tweaked{}.png'.format(i))
+            mean += 0.05

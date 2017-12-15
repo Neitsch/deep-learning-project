@@ -101,6 +101,7 @@ class CapsNet(chainer.Chain):
         self.results['loss'].append(self.loss.data * t.shape[0])
         self.results['correct'].append(self.calculate_correct(vs_norm, t))
         self.results['N'] += t.shape[0]
+        #print(self.results)
         return self.loss
 
     def output(self, x):
@@ -145,6 +146,7 @@ class CapsNet(chainer.Chain):
                 assert(bs.shape == (batchsize, 10, 32, gg))
 
         vs_norm = get_norm(vs)
+
         return vs_norm, vs
 
     def reconstruct(self, vs, t):
