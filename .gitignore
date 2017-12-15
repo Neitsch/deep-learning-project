@@ -107,3 +107,5 @@ ENV/
 mnist_chainer/saved_model
 *.DS_Store
 *.swo
+recaptcha_capsnet/saved_model
+*.png
