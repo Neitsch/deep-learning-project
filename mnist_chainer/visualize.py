@@ -109,12 +109,13 @@ if __name__ == '__main__':
             mean_str = str(mean).replace('.','_')
             csvwriter = csv.writer(csvfile)
             test = apply_gaussian_noise(test_base,mean)
-
-            batch = get_samples(test)
-            x, t = concat_examples(batch, args.gpu)
+            x, t = concat_examples(test[1:500], args.gpu)
             model(x,t)
             result = model.pop_results()
             print(result['accuracy'])
+
+            batch = get_samples(test)
+            x, t = concat_examples(batch, args.gpu)
             csvwriter.writerow([mean, result['accuracy']])
             with chainer.no_backprop_mode():
                 with chainer.using_config('train', False):

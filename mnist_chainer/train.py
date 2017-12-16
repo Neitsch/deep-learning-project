@@ -12,6 +12,7 @@ from chainer.datasets import tuple_dataset
 
 import nets
 
+
 def apply_gaussian_noise(image_tuple, mean=0.5):
     final_images = []
     final_labels = []
@@ -19,7 +20,8 @@ def apply_gaussian_noise(image_tuple, mean=0.5):
    
     for image, label in image_tuple:
   
-        noise_img = np.random.normal(mean, stdev, image.shape).astype('float32')
+        sample = np.random.random_sample()
+        noise_img = np.random.normal(mean*sample, stdev*sample, image.shape).astype('float32')
         noise_img = np.clip(noise_img, 0, 1)
         #print(noise_img)
         new_img = image + noise_img 
@@ -31,7 +33,7 @@ def apply_gaussian_noise(image_tuple, mean=0.5):
     
 
     return tuple_dataset.TupleDataset(final_images, final_labels)
-    
+
 def main():
     parser = argparse.ArgumentParser(description='CapsNet: MNIST')
     parser.add_argument('--batchsize', '-b', type=int, default=256)
@@ -80,13 +82,14 @@ def main():
     best = 0.
     best_epoch = 0
     print('TRAINING starts')
-    mean_str = str(args.noise).replace('.','_')
-    train_csv_file = open('C:\\Users\\tianyu\\Google Drive\\capsnet_train_{}.csv'.format(mean_str),'w', newline='')
-    test_csv_file = open('C:\\Users\\tianyu\\Google Drive\\capsnet_test_{}.csv'.format(mean_str),'w', newline='')
+    mean_str = str(args.noise)[0:4].replace('.','_')
+    train_csv_file = open('C:\\Users\\tianyu\\Google Drive\\Current Courses\\COMS4995 Deep Learning\\project stuff\\noise_test_noise_training\\capsnet_train_{}.csv'.format(mean_str),'w', newline='')
+    test_csv_file = open('C:\\Users\\tianyu\\Google Drive\\Current Courses\\COMS4995 Deep Learning\\project stuff\\noise_test_noise_training\\capsnet_test_{}.csv'.format(mean_str),'w', newline='')
     train_csvwriter = csv.writer(train_csv_file)
     test_csvwriter = csv.writer(test_csv_file)
     while train_iter.epoch < args.epoch:
         batch = train_iter.next()
+        batch = apply_gaussian_noise(batch, args.noise)
         x, t = concat_examples(batch, args.gpu)
         optimizer.update(model, x, t)
 
